@@ -1,0 +1,25 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Residencia {
+  id          Int          @id @default(autoincrement())
+  nome        String
+  numero      String       @unique
+  criadoEm   DateTime     @default(now())
+  dispositivos Dispositivo[]
+}
+
+model Dispositivo {
+  id           Int        @id @default(autoincrement())
+  nome         String
+  token        String     @unique
+  tipo         String     @default("residencia")
+  residenciaId Int?
+  residencia   Residencia? @relation(fields: [residenciaId], references: [id])
+  criadoEm    DateTime   @default(now())
+}
