@@ -5,7 +5,6 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 lerna-debug.log*
-
 # Diagnostic reports (https://nodejs.org/api/report.html)
 report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
 
@@ -141,3 +140,20 @@ dist
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
 .vite/
+# Dependências
+node_modules/
+
+# Variáveis de ambiente
+.env
+
+# Android Studio / IntelliJ IDEA
+.idea/
+*.iml
+*.xml
+
+# Build
+dist/
+build/
+
+# Logs
+*.log
