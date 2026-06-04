@@ -1,310 +1,63 @@
-# Sistema de Interfone Inteligente de Baixo Custo para Condomínios
-# InterFacil — Sistema de Interfone Inteligente
+# 📟 Interfone Inteligente
 
-Guia completo para rodar o projeto localmente do zero.
-
----
-
-## Pré-requisitos
-
-Instale as ferramentas abaixo antes de começar:
-
-| Ferramenta | Link |
-|---|---|
-| Node.js v18 ou superior | https://nodejs.org |
-| Docker Desktop | https://www.docker.com/products/docker-desktop |
-| Git | https://git-scm.com |
-| Android Studio | https://developer.android.com/studio |
-| VS Code | https://code.visualstudio.com |
-| DBeaver (opcional) | https://dbeaver.io |
-| Postman (opcional) | https://www.postman.com |
+### Sistema de comunicação de voz em tempo real para condomínios
+Reutilize dispositivos Android antigos como terminais de interfone — sem instalar aplicativos.
 
 ---
 
-## Estrutura do projeto
+## 📖 Sobre o Projeto
+O **Interfone Inteligente** é um sistema de comunicação de voz em tempo real desenvolvido para condomínios, com foco em baixo custo e simplicidade de uso.
 
-```
-InterFacil/
-├── backend/
-│   ├── auth-service/         # Autenticação e JWT
-│   ├── registro-service/     # Cadastro de residências e dispositivos
-│   ├── chamada-service/      # Gerenciamento de chamadas
-│   └── notif-service/        # Notificações push
-├── signaling-server/         # Servidor WebRTC (Socket.io)
-├── android-app/              # App Android (Kotlin)
-├── painel-admin/             # Painel web (React)
-└── docker-compose.yml        # Infraestrutura local
-```
+A proposta é transformar dispositivos Android antigos em terminais de interfone, eliminando a necessidade de equipamentos caros ou a instalação de aplicativos. Tudo funciona diretamente pelo navegador, rodando prioritariamente em rede local Wi-Fi — com suporte opcional a redes móveis (4G/5G) como redundância.
 
 ---
 
-## 1. Clone o repositório
+## 🛠️ Tecnologias Utilizadas
 
-```bash
-git clone https://github.com/seu-usuario/interfacil.git
-cd interfacil
-```
-
----
-
-## 2. Suba a infraestrutura com Docker
-
-Com o Docker Desktop aberto e rodando, execute na raiz do projeto:
-
-```bash
-docker-compose up -d
-```
-
-Aguarde cerca de 30 segundos e verifique se os 3 containers estão rodando:
-
-```bash
-docker ps
-```
-
-Você deve ver:
-
-```
-interfone-postgres    → porta 5432
-interfone-redis       → porta 6379
-interfone-rabbitmq    → porta 5672 e 15672
-```
-
-Para confirmar que o RabbitMQ subiu, acesse no navegador:
-**http://localhost:15672**
-- Usuário: `admin`
-- Senha: `senha123`
+| Componente | Tecnologia | Função no Projeto |
+| :--- | :--- | :--- |
+| **🖥️ Servidor** | Node.js + Express + Socket.io | Comunicação em tempo real e sinalização entre os terminais. |
+| **📱 App nos celulares** | Navegador Web (Google Chrome) | Acesso direto ao sistema, dispensando instalação de apps. |
+| **🎙️ Chamadas de voz** | WebRTC Nativo + Socket.io | Comunicação de áudio P2P (ponto a ponto) diretamente pelo browser. |
+| **🗄️ Banco de dados** | SQLite / JSON | Armazenamento leve, rápido e sem necessidade de configurações complexas. |
+| **🖱️ Painel administrativo**| HTML5 + CSS3 + JavaScript | Interface web para cadastro, remoção e monitoramento dos dispositivos. |
 
 ---
 
-## 3. Auth Service
-
-### Instalar e configurar
-
-```bash
-cd backend/auth-service
-npm install
-```
-
-Crie o arquivo `.env` na pasta `backend/auth-service/`:
-
-```env
-DATABASE_URL="postgresql://admin:senha123@localhost:5432/interfone"
-JWT_SECRET="interfone_secret_2024"
-PORT=3001
-```
-
-### Rodar a migration do banco
-
-```bash
-npx prisma migrate dev --name init
-npx prisma generate
-```
-
-### Iniciar o serviço
-
-```bash
-npm run dev
-```
-
-Deve aparecer no terminal:
-```
-Auth Service rodando na porta 3001
-```
-
-### Testar no Postman
-
-**Cadastrar administrador:**
-```
-POST http://localhost:3001/auth/register
-Content-Type: application/json
-
-{
-  "email": "admin@interfone.com",
-  "senha": "123456"
-}
-```
-
-Resposta esperada:
-```json
-{
-  "mensagem": "Usuário criado",
-  "id": 1
-}
-```
-
-**Fazer login:**
-```
-POST http://localhost:3001/auth/login
-Content-Type: application/json
-
-{
-  "email": "admin@interfone.com",
-  "senha": "123456"
-}
-```
-
-Resposta esperada:
-```json
-{
-  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
-}
-```
-
-> Guarde esse token — ele será usado nas requisições autenticadas.
+## 🏗️ Arquitetura do Sistema
+*Seção em desenvolvimento. Os diagramas arquiteturais, fluxo de dados e mapeamento de componentes estão sendo refinados e serão publicados na próxima versão do documento.*
 
 ---
 
-## 4. Registro Service
-
-### Instalar e configurar
-
-```bash
-cd backend/registro-service
-npm install
-```
-
-Crie o arquivo `.env` na pasta `backend/registro-service/`:
-
-```env
-DATABASE_URL="postgresql://admin:senha123@localhost:5432/interfone"
-PORT=3002
-```
-
-### Rodar a migration do banco
-
-```bash
-npx prisma migrate dev --name init
-npx prisma generate
-```
-
-### Iniciar o serviço
-
-```bash
-npm run dev
-```
-
-Deve aparecer no terminal:
-```
-Registro Service rodando na porta 3002
-```
-
-### Testar no Postman
-
-**Cadastrar uma residência:**
-```
-POST http://localhost:3002/residencias
-Content-Type: application/json
-
-{
-  "nome": "Apartamento 101",
-  "numero": "101"
-}
-```
-
-**Cadastrar a portaria:**
-```
-POST http://localhost:3002/dispositivos
-Content-Type: application/json
-
-{
-  "nome": "Portaria Principal",
-  "token": "portaria-001",
-  "tipo": "portaria"
-}
-```
-
-**Cadastrar dispositivo de uma residência:**
-```
-POST http://localhost:3002/dispositivos
-Content-Type: application/json
-
-{
-  "nome": "Dispositivo Apto 101",
-  "token": "apto-101-device",
-  "tipo": "residencia",
-  "residenciaId": 1
-}
-```
-
-**Listar residências:**
-```
-GET http://localhost:3002/residencias
-```
-
-**Listar dispositivos:**
-```
-GET http://localhost:3002/dispositivos
-```
+## 📋 Pré-requisitos
+* Node.js v18 ou superior.
+* Dispositivos Android com navegador Chrome atualizado (com suporte a WebRTC).
+* Rede Wi-Fi local estável.
+* **Configuração de HTTPS/SSL** (obrigatório para que o navegador libere o acesso ao microfone via WebRTC).
 
 ---
 
-## 5. Visualizar os dados no DBeaver
-
-O DBeaver permite visualizar todas as tabelas do banco de dados PostgreSQL.
-
-### Criar a conexão
-
-1. Abra o DBeaver
-2. Clique no ícone de tomada no canto superior esquerdo — **"New Database Connection"**
-3. Selecione **PostgreSQL** e clique em **Next**
-4. Preencha os campos:
-
-| Campo | Valor |
-|---|---|
-| Host | localhost |
-| Port | 5432 |
-| Database | interfone |
-| Username | admin |
-| Password | senha123 |
-
-5. Clique em **"Test Connection"**
-   - Na primeira vez, o DBeaver pedirá para baixar o driver do PostgreSQL — clique em **Download** e aguarde
-6. Clique em **Finish**
-
-### Visualizar as tabelas
-
-No painel esquerdo, navegue até:
-
-```
-interfone → Schemas → public → Tables
-```
-
-Você verá as tabelas:
-- `Usuario` — administradores cadastrados
-- `Residencia` — apartamentos e casas
-- `Dispositivo` — celulares associados às residências
-
-### Ver os dados de uma tabela
-
-Clique com o botão direito em qualquer tabela e selecione **"View Data"**.
-
-Os registros aparecerão em formato de planilha, onde você pode filtrar, ordenar e exportar.
+## ⚠️ Possíveis Gargalos e Desafios
+* **Infraestrutura de Rede:** A qualidade e estabilidade do áudio dependem diretamente da cobertura do sinal Wi-Fi do condomínio.
+* **Compatibilidade de Hardware:** Celulares obsoletos demais (ex: Android 4.4 ou inferior) podem ter versões do Chrome incompatíveis com os protocolos atuais do WebRTC.
+* **Consumo de Bateria:** Dispositivos com a tela ligada ou em uso contínuo demandam alimentação constante na tomada.
 
 ---
 
-## Portas utilizadas
+## 🛡️ Tolerância a Falhas
 
-| Serviço | Porta |
-|---|---|
-| Auth Service | 3001 |
-| Registro Service | 3002 |
-| PostgreSQL | 5432 |
-| Redis | 6379 |
-| RabbitMQ (AMQP) | 5672 |
-| RabbitMQ (Painel) | 15672 |
+| Mecanismo | Descrição |
+| :--- | :--- |
+| **🔁 Reconexão automática** | Os terminais restabelecem a conexão com o servidor automaticamente em caso de queda rápida de sinal. |
+| **📡 Monitoramento em tempo real** | O painel administrativo exibe o status online/offline de cada terminal continuamente (Heartbeat). |
+| **📶 Redundância de rede** | Suporte a dados móveis (4G/5G) como contingência caso a rede Wi-Fi local falhe. |
+| **💾 Persistência de dados** | O SQLite garante a integridade dos dados e configurações mesmo após reinicializações do servidor. |
 
 ---
 
-## Dúvidas frequentes
-
-**Os containers não sobem:**
-Verifique se o Docker Desktop está aberto e rodando antes de executar `docker-compose up -d`.
-
-**Erro de conexão com o banco:**
-Confirme que o container `interfone-postgres` está rodando com `docker ps` e que o `.env` tem a URL correta.
-
-**Porta já em uso:**
-Algum outro serviço está usando a porta. Troque o `PORT` no `.env` para outra porta disponível.
-
-**npm run dev não encontra o arquivo:**
-Confirme que a pasta `src/` e o arquivo `index.js` foram criados corretamente dentro do serviço.
+## 🎯 Resultados Esperados
+- [x] Protótipo funcional com ao menos 3 dispositivos homologados.
+- [x] Chamadas de voz estáveis em ambiente de rede controlada.
+- [x] Painel administrativo operacional para cadastro de residências.
+- [x] Persistência de dados (dispositivos, residências e histórico de chamadas).
+- [x] Demonstração prática validada em cenário real.
