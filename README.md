@@ -61,3 +61,6 @@ A proposta é transformar dispositivos Android antigos em terminais de interfone
 - [x] Painel administrativo operacional para cadastro de residências.
 - [x] Persistência de dados (dispositivos, residências e histórico de chamadas).
 - [x] Demonstração prática validada em cenário real.
+
+guia para rodar o backend
+- backend/readne.md
