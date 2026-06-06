@@ -157,3 +157,7 @@ build/
 
 # Logs
 *.log
+
+
+# Prompt
+prompt.tex
