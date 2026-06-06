@@ -2,19 +2,15 @@ const express = require('express')
 const router = express.Router()
 const bcrypt = require('bcryptjs')
 const jwt = require('jsonwebtoken')
-const { PrismaClient } = require('@prisma/client')
-const { PrismaPg } = require('@prisma/adapter-pg')
-
-const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL })
-const prisma = new PrismaClient({ adapter })
+const { prisma } = require('shared-db')
 
 // Cadastrar admin
 router.post('/register', async (req, res) => {
     try {
-        const { email, senha } = req.body
+        const { email, senha, nome = 'Administrador' } = req.body
         const senhaHash = await bcrypt.hash(senha, 10)
         const usuario = await prisma.usuario.create({
-            data: { email, senha: senhaHash }
+            data: { email, senhaHash, nome, perfil: 'admin' }
         })
         res.json({ mensagem: 'Usuário criado', id: usuario.id })
     } catch (err) {
@@ -32,14 +28,14 @@ router.post('/login', async (req, res) => {
             return res.status(401).json({ erro: 'Usuário não encontrado' })
         }
 
-        const senhaValida = await bcrypt.compare(senha, usuario.senha)
+        const senhaValida = await bcrypt.compare(senha, usuario.senhaHash)
 
         if (!senhaValida) {
             return res.status(401).json({ erro: 'Senha incorreta' })
         }
 
         const token = jwt.sign(
-            { id: usuario.id, email: usuario.email, role: usuario.role },
+            { id: usuario.id, email: usuario.email, role: usuario.perfil },
             process.env.JWT_SECRET,
             { expiresIn: '24h' }
         )

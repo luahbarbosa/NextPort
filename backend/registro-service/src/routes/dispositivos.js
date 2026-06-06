@@ -1,10 +1,6 @@
 const express = require('express')
 const router = express.Router()
-const { PrismaClient } = require('@prisma/client')
-const { PrismaPg } = require('@prisma/adapter-pg')
-
-const adapter = new PrismaPg({ connectionString: "postgresql://admin:senha123@localhost:5432/interfone" })
-const prisma = new PrismaClient({ adapter })
+const { prisma } = require('shared-db')
 
 // Listar todos
 router.get('/', async (req, res) => {
@@ -17,9 +13,9 @@ router.get('/', async (req, res) => {
 // Cadastrar
 router.post('/', async (req, res) => {
   try {
-    const { nome, token, tipo, residenciaId } = req.body
+    const { nomeDispositivo, androidId, tipo, residenciaId } = req.body
     const dispositivo = await prisma.dispositivo.create({
-      data: { nome, token, tipo, residenciaId: residenciaId ? Number(residenciaId) : null }
+      data: { nomeDispositivo, androidId, tipo, residenciaId: residenciaId ? Number(residenciaId) : null }
     })
     res.json(dispositivo)
   } catch (err) {
