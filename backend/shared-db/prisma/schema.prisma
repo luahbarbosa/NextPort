@@ -1,0 +1,158 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Perfil {
+  admin
+  operador
+  morador
+}
+
+model Usuario {
+  id               Int       @id @default(autoincrement())
+  nome             String    @db.VarChar(100)
+  email            String    @unique @db.VarChar(150)
+  senhaHash        String    @map("senha_hash") @db.VarChar(255)
+  perfil           Perfil
+  fotoUrl          String?   @map("foto_url") @db.VarChar(255)
+  tokenRecuperacao String?   @map("token_recuperacao") @db.VarChar(255)
+  tokenExpiraEm    DateTime? @map("token_expira_em")
+  criadoEm         DateTime? @default(now()) @map("criado_em")
+  ultimoLogin      DateTime? @map("ultimo_login")
+
+  residencias Residencia[]
+  logs        LogSistema[]
+
+  @@map("usuarios")
+  @@index([email])
+}
+
+model Residencia {
+  id            Int       @id @default(autoincrement())
+  identificador String    @unique @db.VarChar(20)
+  bloco         String?   @db.VarChar(20)
+  usuarioId     Int       @map("usuario_id")
+  ativa         Boolean?  @default(true)
+  criadoEm      DateTime? @default(now()) @map("criado_em")
+
+  usuario      Usuario       @relation(fields: [usuarioId], references: [id])
+  dispositivos Dispositivo[]
+
+  @@map("residencias")
+  @@index([usuarioId])
+}
+
+enum TipoDispositivo {
+  residencia
+  portaria
+}
+
+model Dispositivo {
+  id              Int             @id @default(autoincrement())
+  residenciaId    Int?            @map("residencia_id")
+  tipo            TipoDispositivo
+  nomeDispositivo String          @map("nome_dispositivo") @db.VarChar(100)
+  androidId       String          @unique @map("android_id") @db.VarChar(100)
+  ipLocal         String?         @map("ip_local") @db.VarChar(45)
+  macAddress      String?         @map("mac_address") @db.VarChar(17)
+  versaoApp       String?         @map("versao_app") @db.VarChar(20)
+  ultimoPing      DateTime?       @map("ultimo_ping")
+  criadoEm        DateTime?       @default(now()) @map("criado_em")
+
+  residencia           Residencia?         @relation(fields: [residenciaId], references: [id])
+  chamadasOrigem       Chamada[]           @relation("OrigemChamada")
+  chamadasDestino      Chamada[]           @relation("DestinoChamada")
+  notificacoes         Notificacao[]
+  atualizacoesRemotas  AtualizacaoRemota[]
+  logs                 LogSistema[]
+
+  @@map("dispositivos")
+  @@index([androidId])
+  @@index([ultimoPing])
+}
+
+enum StatusChamada {
+  atendida
+  nao_atendida
+  recusada
+  erro
+}
+
+model Chamada {
+  id                   Int           @id @default(autoincrement())
+  dispositivoOrigemId  Int           @map("dispositivo_origem_id")
+  dispositivoDestinoId Int           @map("dispositivo_destino_id")
+  iniciadoEm           DateTime      @map("iniciado_em")
+  atendidoEm           DateTime?     @map("atendido_em")
+  encerradoEm          DateTime?     @map("encerrado_em")
+  status               StatusChamada
+
+  origem       Dispositivo   @relation("OrigemChamada", fields: [dispositivoOrigemId], references: [id])
+  destino      Dispositivo   @relation("DestinoChamada", fields: [dispositivoDestinoId], references: [id])
+  notificacoes Notificacao[]
+
+  @@map("chamadas")
+  @@index([dispositivoOrigemId])
+  @@index([dispositivoDestinoId])
+}
+
+enum TipoNotificacao {
+  chamada
+  sistema
+  atualizacao
+}
+
+model Notificacao {
+  id             Int             @id @default(autoincrement())
+  dispositivoId  Int             @map("dispositivo_id")
+  chamadaId      Int?            @map("chamada_id")
+  tipo           TipoNotificacao
+  mensagem       String?         @db.Text
+  lida           Boolean?        @default(false)
+  criadoEm       DateTime?       @default(now()) @map("criado_em")
+
+  dispositivo Dispositivo @relation(fields: [dispositivoId], references: [id])
+  chamada     Chamada?    @relation(fields: [chamadaId], references: [id])
+
+  @@map("notificacoes")
+}
+
+enum StatusAtualizacao {
+  pendente
+  em_andamento
+  concluida
+  erro
+}
+
+model AtualizacaoRemota {
+  id            Int               @id @default(autoincrement())
+  dispositivoId Int               @map("dispositivo_id")
+  versaoNova    String            @map("versao_nova") @db.VarChar(20)
+  urlPacote     String?           @map("url_pacote") @db.VarChar(255)
+  status        StatusAtualizacao @default(pendente)
+  solicitadoEm  DateTime?         @default(now()) @map("solicitado_em")
+  concluidoEm   DateTime?         @map("concluido_em")
+
+  dispositivo Dispositivo @relation(fields: [dispositivoId], references: [id])
+
+  @@map("atualizacoes_remotas")
+}
+
+model LogSistema {
+  id            Int       @id @default(autoincrement())
+  usuarioId     Int?      @map("usuario_id")
+  dispositivoId Int?      @map("dispositivo_id")
+  acao          String    @db.VarChar(100)
+  detalhes      String?   @db.Text
+  criadoEm      DateTime? @default(now()) @map("criado_em")
+
+  usuario     Usuario?     @relation(fields: [usuarioId], references: [id])
+  dispositivo Dispositivo? @relation(fields: [dispositivoId], references: [id])
+
+  @@map("logs_sistema")
+}
