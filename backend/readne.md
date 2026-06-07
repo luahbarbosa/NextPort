@@ -1,3 +1,7 @@
+Aqui está o README atualizado completo:
+
+---
+
 # InterFacil — Sistema de Interfone Inteligente
 
 Guia completo para rodar o projeto localmente do zero.
@@ -6,15 +10,13 @@ Guia completo para rodar o projeto localmente do zero.
 
 ## Pré-requisitos
 
-Instale as ferramentas abaixo antes de começar:
-
 | Ferramenta | Link |
 |---|---|
 | Node.js v18 ou superior | https://nodejs.org |
 | Docker Desktop | https://www.docker.com/products/docker-desktop |
 | Git | https://git-scm.com |
-| Android Studio | https://developer.android.com/studio |
 | VS Code | https://code.visualstudio.com |
+| Expo Go (celular Android/iOS) | Play Store / App Store |
 | DBeaver (opcional) | https://dbeaver.io |
 | Postman (opcional) | https://www.postman.com |
 
@@ -25,12 +27,13 @@ Instale as ferramentas abaixo antes de começar:
 ```
 InterFacil/
 ├── backend/
+│   ├── shared-db/            # Banco de dados centralizado (Prisma)
 │   ├── auth-service/         # Autenticação e JWT
 │   ├── registro-service/     # Cadastro de residências e dispositivos
 │   ├── chamada-service/      # Gerenciamento de chamadas
 │   └── notif-service/        # Notificações push
 ├── signaling-server/         # Servidor WebRTC (Socket.io)
-├── android-app/              # App Android (Kotlin)
+├── android-app/              # App mobile (Expo / React Native)
 ├── painel-admin/             # Painel web (React)
 └── docker-compose.yml        # Infraestrutura local
 ```
@@ -54,7 +57,7 @@ Com o Docker Desktop aberto e rodando, execute na raiz do projeto:
 docker-compose up -d
 ```
 
-Aguarde cerca de 30 segundos e verifique se os 3 containers estão rodando:
+Verifique se os 3 containers estão rodando:
 
 ```bash
 docker ps
@@ -68,23 +71,57 @@ interfone-redis       → porta 6379
 interfone-rabbitmq    → porta 5672 e 15672
 ```
 
-Para confirmar que o RabbitMQ subiu, acesse no navegador:
-**http://localhost:15672**
+Painel do RabbitMQ: **http://localhost:15672**
 - Usuário: `admin`
 - Senha: `senha123`
 
 ---
 
-## 3. Auth Service
+## 3. Banco de dados centralizado (shared-db)
 
-### Instalar e configurar
+O projeto utiliza um único módulo de banco de dados compartilhado entre todos os microsserviços. Você só precisa rodar a migration uma vez.
+
+```bash
+cd backend/shared-db
+npm install
+```
+
+Crie o arquivo `.env` em `backend/shared-db/`:
+
+```env
+DATABASE_URL="postgresql://admin:senha123@localhost:5432/interfone"
+```
+
+Rode a migration e o seed:
+
+```bash
+npx prisma migrate dev --name shared_init
+npx prisma generate
+npm run seed
+```
+
+O seed cria automaticamente:
+- 1 usuário admin
+- 3 moradores
+- 3 residências
+- 1 portaria
+- 4 dispositivos
+- 3 chamadas de exemplo
+
+As 7 tabelas criadas são: `usuarios`, `residencias`, `dispositivos`, `chamadas`, `notificacoes`, `atualizacoes_remotas`, `logs_sistema`.
+
+> A partir de agora, nunca mais rode `prisma migrate` dentro dos microsserviços individuais. Todas as alterações no banco são feitas aqui no `shared-db`.
+
+---
+
+## 4. Auth Service
 
 ```bash
 cd backend/auth-service
 npm install
 ```
 
-Crie o arquivo `.env` na pasta `backend/auth-service/`:
+Crie o `.env` em `backend/auth-service/`:
 
 ```env
 DATABASE_URL="postgresql://admin:senha123@localhost:5432/interfone"
@@ -92,46 +129,15 @@ JWT_SECRET="interfone_secret_2024"
 PORT=3001
 ```
 
-### Rodar a migration do banco
-
-```bash
-npx prisma migrate dev --name init
-npx prisma generate
-```
-
-### Iniciar o serviço
+Inicie o serviço:
 
 ```bash
 npm run dev
 ```
 
-Deve aparecer no terminal:
-```
-Auth Service rodando na porta 3001
-```
-
 ### Testar no Postman
 
-**Cadastrar administrador:**
-```
-POST http://localhost:3001/auth/register
-Content-Type: application/json
-
-{
-  "email": "admin@interfone.com",
-  "senha": "123456"
-}
-```
-
-Resposta esperada:
-```json
-{
-  "mensagem": "Usuário criado",
-  "id": 1
-}
-```
-
-**Fazer login:**
+**Login com o admin do seed:**
 ```
 POST http://localhost:3001/auth/login
 Content-Type: application/json
@@ -153,79 +159,29 @@ Resposta esperada:
 
 ---
 
-## 4. Registro Service
-
-### Instalar e configurar
+## 5. Registro Service
 
 ```bash
 cd backend/registro-service
 npm install
 ```
 
-Crie o arquivo `.env` na pasta `backend/registro-service/`:
+Crie o `.env` em `backend/registro-service/`:
 
 ```env
 DATABASE_URL="postgresql://admin:senha123@localhost:5432/interfone"
 PORT=3002
 ```
 
-### Rodar a migration do banco
-
-```bash
-npx prisma migrate dev --name init
-npx prisma generate
-```
-
-### Iniciar o serviço
+Inicie o serviço:
 
 ```bash
 npm run dev
 ```
 
-Deve aparecer no terminal:
-```
-Registro Service rodando na porta 3002
-```
-
 ### Testar no Postman
 
-**Cadastrar uma residência:**
-```
-POST http://localhost:3002/residencias
-Content-Type: application/json
-
-{
-  "nome": "Apartamento 101",
-  "numero": "101"
-}
-```
-
-**Cadastrar a portaria:**
-```
-POST http://localhost:3002/dispositivos
-Content-Type: application/json
-
-{
-  "nome": "Portaria Principal",
-  "token": "portaria-001",
-  "tipo": "portaria"
-}
-```
-
-**Cadastrar dispositivo de uma residência:**
-```
-POST http://localhost:3002/dispositivos
-Content-Type: application/json
-
-{
-  "nome": "Dispositivo Apto 101",
-  "token": "apto-101-device",
-  "tipo": "residencia",
-  "residenciaId": 1
-}
-```
-
-**Listar residências:**
+**Listar residências (já populadas pelo seed):**
 ```
 GET http://localhost:3002/residencias
 ```
@@ -235,18 +191,60 @@ GET http://localhost:3002/residencias
 GET http://localhost:3002/dispositivos
 ```
 
+**Cadastrar nova residência:**
+```
+POST http://localhost:3002/residencias
+Content-Type: application/json
+
+{
+  "identificador": "Apartamento 102",
+  "bloco": "A",
+  "usuarioId": 1
+}
+```
+
+**Cadastrar dispositivo:**
+```
+POST http://localhost:3002/dispositivos
+Content-Type: application/json
+
+{
+  "nomeDispositivo": "Celular Apto 102",
+  "androidId": "apto-102-device",
+  "tipo": "residencia",
+  "residenciaId": 1
+}
+```
+
 ---
 
-## 5. Visualizar os dados no DBeaver
+## 6. App mobile (Expo)
 
-O DBeaver permite visualizar todas as tabelas do banco de dados PostgreSQL.
+```bash
+cd android-app
+npm install
+```
+
+Inicie o app:
+
+```bash
+npx expo start
+```
+
+Um QR Code aparecerá no terminal. Abra o app **Expo Go** no seu celular Android e escaneie o QR Code para rodar o app diretamente no dispositivo.
+
+> O celular e o computador precisam estar na mesma rede Wi-Fi.
+
+---
+
+## 7. Visualizar os dados no DBeaver
 
 ### Criar a conexão
 
 1. Abra o DBeaver
-2. Clique no ícone de tomada no canto superior esquerdo — **"New Database Connection"**
-3. Selecione **PostgreSQL** e clique em **Next**
-4. Preencha os campos:
+2. Clique em **"New Database Connection"**
+3. Selecione **PostgreSQL** → **Next**
+4. Preencha:
 
 | Campo | Valor |
 |---|---|
@@ -256,28 +254,18 @@ O DBeaver permite visualizar todas as tabelas do banco de dados PostgreSQL.
 | Username | admin |
 | Password | senha123 |
 
-5. Clique em **"Test Connection"**
-   - Na primeira vez, o DBeaver pedirá para baixar o driver do PostgreSQL — clique em **Download** e aguarde
+5. Clique em **"Test Connection"** — na primeira vez ele pedirá para baixar o driver, clique em **Download**
 6. Clique em **Finish**
 
 ### Visualizar as tabelas
 
-No painel esquerdo, navegue até:
+No painel esquerdo navegue até:
 
 ```
 interfone → Schemas → public → Tables
 ```
 
-Você verá as tabelas:
-- `Usuario` — administradores cadastrados
-- `Residencia` — apartamentos e casas
-- `Dispositivo` — celulares associados às residências
-
-### Ver os dados de uma tabela
-
-Clique com o botão direito em qualquer tabela e selecione **"View Data"**.
-
-Os registros aparecerão em formato de planilha, onde você pode filtrar, ordenar e exportar.
+Você verá as 7 tabelas do projeto. Clique com botão direito em qualquer uma → **"View Data"** para ver os registros.
 
 ---
 
@@ -296,14 +284,10 @@ Os registros aparecerão em formato de planilha, onde você pode filtrar, ordena
 
 ## Dúvidas frequentes
 
-**Os containers não sobem:**
-Verifique se o Docker Desktop está aberto e rodando antes de executar `docker-compose up -d`.
+**Os containers não sobem:** Verifique se o Docker Desktop está aberto antes de rodar `docker-compose up -d`.
 
-**Erro de conexão com o banco:**
-Confirme que o container `interfone-postgres` está rodando com `docker ps` e que o `.env` tem a URL correta.
+**Erro de conexão com o banco:** Confirme que o container `interfone-postgres` está rodando com `docker ps`.
 
-**Porta já em uso:**
-Algum outro serviço está usando a porta. Troque o `PORT` no `.env` para outra porta disponível.
+**App não conecta ao backend pelo Expo:** Certifique-se de que o celular e o computador estão na mesma rede Wi-Fi. Substitua `10.0.2.2` pelo IP local do seu computador (ex: `192.168.1.x`).
 
-**npm run dev não encontra o arquivo:**
-Confirme que a pasta `src/` e o arquivo `index.js` foram criados corretamente dentro do serviço.
+**Porta já em uso:** Troque o `PORT` no `.env` do serviço correspondente.
