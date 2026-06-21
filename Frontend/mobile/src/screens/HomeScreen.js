@@ -134,18 +134,7 @@ export default function HomeScreen() {
                 }
             />
 
-            {/* Bottom Tab Bar */}
-            <View style={styles.tabBar}>
-                <TouchableOpacity style={styles.tabItem}>
-                    <Image source={require('../../assets/home.png')} style={styles.tabIcone} />
-                </TouchableOpacity>
-                <TouchableOpacity style={styles.tabItem}>
-                    <Image source={require('../../assets/historico.png')} style={styles.tabIcone} />
-                </TouchableOpacity>
-                <TouchableOpacity style={styles.tabItem}>
-                    <Image source={require('../../assets/settings.png')} style={styles.tabIcone} />
-                </TouchableOpacity>
-            </View>
+
 
         </SafeAreaView>
     );
@@ -240,18 +229,6 @@ const styles = StyleSheet.create({
     badgeStatusTexto: { fontFamily: 'Poppins_400Regular', color: '#fff', fontSize: 11 },
     icone: { width: 28, height: 28 },
 
-    tabBar: {
-        flexDirection: 'row',
-        backgroundColor: '#fff',
-        borderTopWidth: 1,
-        borderTopColor: '#eee',
-        paddingVertical: 18,        // era 10, aumentei para 18
-        paddingBottom: 28,          // adiciona espaço extra embaixo
-        position: 'absolute',
-        bottom: 0, left: 0, right: 0,
-    },
-    tabItem: { flex: 1, alignItems: 'center', justifyContent: 'center' },
-    tabIcone: { width: 26, height: 26 },
 
     vazio: {
         fontFamily: 'Poppins_400Regular',
