@@ -6,6 +6,7 @@ import LoginScreen from './src/screens/LoginScreen';
 import HomeScreen from './src/screens/HomeScreen';
 import HistoricoScreen from './src/screens/HistoricoScreen';
 import SplashScreen from './src/screens/SplashScreen';
+import ChamadaScreen from './src/screens/ChamadaScreen';
 
 const Tab = createBottomTabNavigator();
 const Stack = createStackNavigator();
@@ -87,6 +88,7 @@ export default function App() {
         <Stack.Screen name="Splash" component={SplashScreen} />
         <Stack.Screen name="Login" component={LoginScreen} />
         <Stack.Screen name="MainTabs" component={MainTabs} />
+        <Stack.Screen name="Chamada" component={ChamadaScreen} />
       </Stack.Navigator>
     </NavigationContainer>
   );

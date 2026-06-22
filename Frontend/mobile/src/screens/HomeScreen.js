@@ -6,7 +6,7 @@ import {
 import { useFonts, Poppins_400Regular, Poppins_600SemiBold, Poppins_700Bold } from '@expo-google-fonts/poppins';
 import api from '../services/api';
 
-export default function HomeScreen() {
+export default function HomeScreen({ navigation }) {
     const [dispositivos, setDispositivos] = useState([]);
     const [busca, setBusca] = useState('');
     const [portaria, setPortaria] = useState(null);
@@ -50,7 +50,11 @@ export default function HomeScreen() {
     const renderContato = ({ item }) => (
         <TouchableOpacity
             style={styles.contatoCard}
-            onPress={() => alert(`Chamando ${item.nomeDispositivo}...`)}
+            onPress={() => navigation.navigate('Chamada', {
+                nome: item.nomeDispositivo,
+                local: item.residencia?.identificador || 'Portaria',
+                tipo: 'chamando'
+            })}
             disabled={!isOnline(item.ultimoPing)}
         >
             <Image source={require('../../assets/avatar.png')} style={styles.avatar} />
@@ -97,7 +101,14 @@ export default function HomeScreen() {
 
             {/* Portaria */}
             {portaria && (
-                <TouchableOpacity style={styles.portariaCard}>
+                <TouchableOpacity
+                    style={styles.portariaCard}
+                    onPress={() => navigation.navigate('Chamada', {
+                        nome: 'Portaria',
+                        local: 'Portaria Principal',
+                        tipo: 'chamando'
+                    })}
+                >
                     <View>
                         <Text style={styles.portariaNome}>Portaria</Text>
                         <Text style={styles.portariaStatus}>
@@ -133,8 +144,6 @@ export default function HomeScreen() {
                     <Text style={styles.vazio}>Nenhum contato encontrado</Text>
                 }
             />
-
-
 
         </SafeAreaView>
     );
@@ -228,7 +237,6 @@ const styles = StyleSheet.create({
     offline: { backgroundColor: '#FFA726' },
     badgeStatusTexto: { fontFamily: 'Poppins_400Regular', color: '#fff', fontSize: 11 },
     icone: { width: 28, height: 28 },
-
 
     vazio: {
         fontFamily: 'Poppins_400Regular',
