@@ -1,0 +1,122 @@
+﻿<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>NexPort - Dispositivos</title>
+  <link rel="stylesheet" href="src/css/stylesdois.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@phosphor-icons/web@2.0.1/dist/phosphor.css" />
+</head>
+<body>
+  <div class="dashboard-container devices-page">
+    <aside class="sidebar">
+      <div class="sidebar-logo">
+        <div class="logo-icon"><i class="ph ph-network"></i></div>
+        <span class="logo-text">NexPort</span>
+      </div>
+      <nav class="sidebar-menu">
+        <ul class="menu-list">
+          <li class="menu-item"><a href="index.html" class="menu-link"><i class="ph ph-gauge"></i><span>Gerenciamento Central</span></a></li>
+          <li class="menu-item active"><a href="dispositivos.html" class="menu-link"><i class="ph ph-device-tablet"></i><span>Dispositivos</span></a></li>
+          <li class="menu-item"><a href="#" class="menu-link"><i class="ph ph-house"></i><span>Residências</span></a></li>
+          <li class="menu-item"><a href="#" class="menu-link"><i class="ph ph-phone"></i><span>Chamadas</span></a></li>
+          <li class="menu-item"><a href="#" class="menu-link"><i class="ph ph-clock-counter-clockwise"></i><span>Histórico</span></a></li>
+          <li class="menu-item"><a href="#" class="menu-link"><i class="ph ph-users"></i><span>Usuários</span></a></li>
+          <li class="menu-item"><a href="#" class="menu-link"><i class="ph ph-gear"></i><span>Configurações</span></a></li>
+        </ul>
+      </nav>
+      <div class="sidebar-footer">
+        <div class="user-profile">
+          <div class="user-avatar">LM</div>
+          <div class="user-info">
+            <p class="user-name">Laura Meneses</p>
+            <p class="user-role">Administrador</p>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <main class="main-content">
+      <header class="page-header devices-header">
+        <div class="header-left">
+          <h1 class="page-title">Dispositivos</h1>
+          <p class="page-subtitle">Gerencie todos os dispositivos cadastrados no sistema.</p>
+        </div>
+        <div class="header-right">
+          <button class="icon-button notification-btn" type="button"><i class="ph ph-bell"></i><span class="notification-badge">4</span></button>
+          <button class="btn btn-primary" id="btn-open-register" type="button"><i class="ph ph-plus"></i>Cadastrar dispositivo</button>
+        </div>
+      </header>
+      <section class="devices-content">
+        <div class="devices-grid">
+          <div class="table-panel">
+            <div class="table-actions">
+              <div class="search-box">
+                <i class="ph ph-magnifying-glass search-icon"></i>
+                <input type="text" id="search-device" class="search-input" placeholder="Buscar dispositivo..." />
+              </div>
+              <button class="btn btn-secondary" id="btn-filters" type="button"><i class="ph ph-sliders"></i>Filtros</button>
+            </div>
+            <div class="panel-card">
+              <div class="table-wrapper">
+                <table class="devices-table">
+                  <thead>
+                    <tr>
+                      <th>Dispositivo</th>
+                      <th>Modelo</th>
+                      <th>Residência</th>
+                      <th>Status</th>
+                      <th>Último acesso</th>
+                      <th>Ações</th>
+                    </tr>
+                  </thead>
+                  <tbody id="devices-table-body"></tbody>
+                </table>
+              </div>
+              <div class="table-footer">
+                <div class="pagination-info" id="pagination-info">Mostrando 1 a 5 de 5 dispositivos</div>
+                <div class="pagination-controls">
+                  <button class="pagination-btn" disabled>&lt;</button>
+                  <button class="pagination-btn active">1</button>
+                  <button class="pagination-btn" disabled>&gt;</button>
+                </div>
+              </div>
+            </div>
+            <div class="legend-grid">
+              <div class="legend-card">
+                <h3>Legenda de status</h3>
+                <div class="legend-item"><span class="status-badge status-online"></span><span>Online</span></div>
+                <div class="legend-item"><span class="status-badge status-offline"></span><span>Offline</span></div>
+                <div class="legend-item"><span class="status-badge status-inactive"></span><span>Inativo</span></div>
+              </div>
+              <div class="legend-card">
+                <h3>Ações disponíveis</h3>
+                <div class="legend-item"><i class="ph ph-arrow-counter-clockwise legend-icon"></i><span>Reiniciar conexão</span></div>
+                <div class="legend-item"><i class="ph ph-pencil legend-icon"></i><span>Editar</span></div>
+                <div class="legend-item"><i class="ph ph-trash legend-icon"></i><span>Remover</span></div>
+              </div>
+            </div>
+          </div>
+          <aside class="form-panel">
+            <div class="panel-card form-card">
+              <div class="form-header">
+                <h2>Cadastrar dispositivo</h2>
+                <p>Adicione um novo aparelho Android como interfone digital.</p>
+              </div>
+              <form id="register-form" class="register-form">
+                <div class="input-group"><i class="ph ph-device-mobile input-icon"></i><label for="device-name">Nome do dispositivo</label><input type="text" id="device-name" placeholder="Ex: Portaria Principal" required /></div>
+                <div class="input-group"><i class="ph ph-smartphone-a input-icon"></i><label for="device-model">Modelo do aparelho</label><input type="text" id="device-model" placeholder="Ex: Samsung A54" required /></div>
+                <div class="input-group"><i class="ph ph-building input-icon"></i><label for="device-residence">Residência associada</label><select id="device-residence" required><option value="">Selecione a residência</option><option value="Apartamento 001 - Bloco A">Apartamento 001 - Bloco A</option><option value="Apartamento 102 - Bloco B">Apartamento 102 - Bloco B</option><option value="Apartamento 203 - Bloco C">Apartamento 203 - Bloco C</option><option value="Apartamento 304 - Bloco D">Apartamento 304 - Bloco D</option><option value="Apartamento 005 - Bloco E">Apartamento 005 - Bloco E</option></select></div>
+                <div class="input-group"><i class="ph ph-hash input-icon"></i><label for="device-android-id">Android ID <span class="optional-text">(opcional)</span></label><input type="text" id="device-android-id" placeholder="Ex: a1b2c3d4e5f6" /></div>
+                <div class="input-group"><i class="ph ph-tag input-icon"></i><label for="device-type">Tipo de dispositivo</label><select id="device-type" required><option value="">Selecione o tipo</option><option value="Portaria">Portaria</option><option value="Residência">Residência</option><option value="Portão">Portão</option><option value="Recepção">Recepção</option><option value="Área Comum">Área Comum</option></select></div>
+                <div class="form-actions"><button type="button" class="btn btn-secondary" id="btn-cancel-form">Cancelar</button><button type="submit" class="btn btn-primary">Cadastrar</button></div>
+              </form>
+            </div>
+          </aside>
+        </div>
+      </section>
+    </main>
+  </div>
+  <script type="module" src="src/js/dispositivos.js"></script>
+</body>
+</html>
