@@ -9,13 +9,48 @@ router.get('/', async (req, res) => {
       orderBy: { iniciadoEm: 'desc' },
       include: {
         origem: {
-          include: { residencia: true }
+          include: { residencia: { include: { usuario: true } } }
         },
         destino: {
-          include: { residencia: true }
+          include: { residencia: { include: { usuario: true } } }
         }
       }
     })
+    res.json(chamadas)
+  } catch (err) {
+    res.status(500).json({ erro: err.message })
+  }
+})
+
+// Listar chamadas por dispositivo (androidId)
+router.get('/por-dispositivo/:androidId', async (req, res) => {
+  try {
+    const dispositivo = await prisma.dispositivo.findUnique({
+      where: { androidId: req.params.androidId }
+    })
+
+    if (!dispositivo) {
+      return res.status(404).json({ erro: 'Dispositivo não encontrado' })
+    }
+
+    const chamadas = await prisma.chamada.findMany({
+      where: {
+        OR: [
+          { dispositivoOrigemId: dispositivo.id },
+          { dispositivoDestinoId: dispositivo.id }
+        ]
+      },
+      orderBy: { iniciadoEm: 'desc' },
+      include: {
+        origem: {
+          include: { residencia: { include: { usuario: true } } }
+        },
+        destino: {
+          include: { residencia: { include: { usuario: true } } }
+        }
+      }
+    })
+
     res.json(chamadas)
   } catch (err) {
     res.status(500).json({ erro: err.message })
