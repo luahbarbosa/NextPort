@@ -5,7 +5,8 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useFonts, Poppins_400Regular, Poppins_600SemiBold, Poppins_700Bold } from '@expo-google-fonts/poppins';
-import { authApi } from '../services/api';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { authApi, registroApi } from '../services/api';
 
 export default function LoginScreen({ navigation }) {
   const [email, setEmail] = useState('');
@@ -19,24 +20,40 @@ export default function LoginScreen({ navigation }) {
     Poppins_700Bold,
   });
 
-  const handleLogin = async () => {
-    if (!email || !senha) {
-      Alert.alert('Atenção', 'Preencha todos os campos');
-      return;
+const handleLogin = async () => {
+  if (!email || !senha) {
+    Alert.alert('Atenção', 'Preencha todos os campos');
+    return;
+  }
+
+  setLoading(true);
+  try {
+    // 1. Login
+    const response = await authApi.post('/auth/login', { email, senha });
+    const { token, nome, id } = response.data;
+
+    // 2. Salva dados do usuário
+    await AsyncStorage.setItem('token', token);
+    await AsyncStorage.setItem('nomeUsuario', nome);
+    await AsyncStorage.setItem('usuarioId', String(id));
+
+    // 3. Busca dispositivo associado ao usuário
+    const dispResponse = await registroApi.get(`/dispositivos/por-usuario/${id}`);
+    const dispositivo = dispResponse.data;
+
+    if (dispositivo) {
+      await AsyncStorage.setItem('androidId', dispositivo.androidId);
+      await AsyncStorage.setItem('localDispositivo', dispositivo.residencia?.identificador || 'Portaria');
     }
 
-    setLoading(true);
-    try {
-      const response = await authApi.post('/auth/login', { email, senha });
-      Alert.alert('Sucesso!', 'Login realizado com sucesso');
-      navigation.replace('MainTabs');
-    } catch (e) {
-      Alert.alert('Erro', 'E-mail ou senha incorretos');
-    } finally {
-      setLoading(false);
-    }
-  };
-
+    navigation.replace('MainTabs');
+  } catch (e) {
+    console.log(e.message);
+    Alert.alert('Erro', 'E-mail ou senha incorretos');
+  } finally {
+    setLoading(false);
+  }
+};
   if (!fontsLoaded) return null;
 
   return (
