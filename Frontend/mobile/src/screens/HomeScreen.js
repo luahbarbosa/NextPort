@@ -5,21 +5,57 @@ import {
 } from 'react-native';
 import { useFonts, Poppins_400Regular, Poppins_600SemiBold, Poppins_700Bold } from '@expo-google-fonts/poppins';
 import api from '../services/api';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { conectarSocket, chamar, desconectarSocket } from '../services/socketService';
 
 export default function HomeScreen({ navigation }) {
     const [dispositivos, setDispositivos] = useState([]);
     const [busca, setBusca] = useState('');
     const [portaria, setPortaria] = useState(null);
+    const [meuAndroidId, setMeuAndroidId] = useState(null);
+    const [meuNome, setMeuNome] = useState('');
+    const [dispositivosOnline, setDispositivosOnline] = useState({});
 
     const [fontsLoaded] = useFonts({
-        Poppins_400Regular,
-        Poppins_600SemiBold,
-        Poppins_700Bold,
+    Poppins_400Regular,
+    Poppins_600SemiBold,
+    Poppins_700Bold,
     });
 
     useEffect(() => {
-        carregarDispositivos();
+        carregarDados();
     }, []);
+
+    const carregarDados = async () => {
+    const androidId = await AsyncStorage.getItem('androidId');
+    const nome = await AsyncStorage.getItem('nomeUsuario'); // ← mudou aqui
+    const local = await AsyncStorage.getItem('localDispositivo');
+
+    setMeuAndroidId(androidId);
+    setMeuNome(nome || 'Usuário');
+
+    await carregarDispositivos();
+
+    if (androidId) {
+        conectarSocket(
+        androidId,
+        (chamadaData) => {
+            navigation.navigate('Chamada', {
+            nome: chamadaData.nome,
+            local: chamadaData.local,
+            tipo: 'recebendo',
+            deAndroidId: chamadaData.deAndroidId,
+            });
+        },
+        (statusData) => {
+            setDispositivosOnline(prev => ({
+                ...prev,
+                [statusData.androidId]: statusData.online
+            }));
+        }
+        );
+    }
+    };
 
     const carregarDispositivos = async () => {
         try {
@@ -32,17 +68,25 @@ export default function HomeScreen({ navigation }) {
         } catch (e) {
             console.log('Erro ao carregar dispositivos:', e.message);
         }
+
+        try {
+            const res = await fetch('http://localhost:3004/status');
+            const lista = await res.json();
+            const initialStatus = {};
+            lista.forEach(id => { initialStatus[id] = true; });
+            setDispositivosOnline(prev => ({ ...prev, ...initialStatus }));
+        } catch (e) {
+            console.log('Erro ao buscar status online:', e.message);
+        }
     };
 
-    const isOnline = (ultimoPing) => {
-        if (!ultimoPing) return false;
-        const diff = (new Date() - new Date(ultimoPing)) / 1000;
-        return diff < 60;
-    };
+    const isOnline = (androidId) => !!dispositivosOnline[androidId];
 
     const filtrados = dispositivos.filter(d =>
-        d.nomeDispositivo?.toLowerCase().includes(busca.toLowerCase()) ||
-        d.residencia?.identificador?.toLowerCase().includes(busca.toLowerCase())
+        d.androidId !== meuAndroidId && (
+            d.nomeDispositivo?.toLowerCase().includes(busca.toLowerCase()) ||
+            d.residencia?.identificador?.toLowerCase().includes(busca.toLowerCase())
+        )
     );
 
     if (!fontsLoaded) return null;
@@ -50,34 +94,39 @@ export default function HomeScreen({ navigation }) {
     const renderContato = ({ item }) => (
         <TouchableOpacity
             style={styles.contatoCard}
-            onPress={() => navigation.navigate('Chamada', {
-                nome: item.nomeDispositivo,
-                local: item.residencia?.identificador || 'Portaria',
-                tipo: 'chamando'
-            })}
-            disabled={!isOnline(item.ultimoPing)}
+            onPress={() => {
+                const nomeContato = item.residencia?.usuario?.nome || item.nomeDispositivo;
+                chamar(meuAndroidId, item.androidId, nomeContato, item.residencia?.identificador || 'Portaria');
+                navigation.navigate('Chamada', {
+                    nome: nomeContato,
+                    local: item.residencia?.identificador || 'Portaria',
+                    tipo: 'chamando',
+                    paraAndroidId: item.androidId,
+                });
+            }}
+            disabled={!isOnline(item.androidId)}
         >
             <Image source={require('../../assets/avatar.png')} style={styles.avatar} />
             <View style={styles.contatoInfo}>
-                <Text style={styles.contatoNome}>{item.nomeDispositivo}</Text>
+                <Text style={styles.contatoNome}>{item.residencia?.usuario?.nome || item.nomeDispositivo}</Text>
                 <View style={styles.badges}>
                     <View style={styles.badgeApto}>
                         <Text style={styles.badgeAptoTexto}>
                             {item.residencia?.identificador || 'Sem residência'}
                         </Text>
                     </View>
-                    <View style={[styles.badgeStatus, isOnline(item.ultimoPing) ? styles.online : styles.offline]}>
+                    <View style={[styles.badgeStatus, isOnline(item.androidId) ? styles.online : styles.offline]}>
                         <Text style={styles.badgeStatusTexto}>
-                            {isOnline(item.ultimoPing) ? 'Online' : 'Offline'}
+                            {isOnline(item.androidId) ? 'Online' : 'Offline'}
                         </Text>
                     </View>
                 </View>
             </View>
             <Image
-                source={isOnline(item.ultimoPing)
+                source={isOnline(item.androidId)
                     ? require('../../assets/telefone-online.png')
                     : require('../../assets/telefone-offline.png')}
-                style={[styles.icone, !isOnline(item.ultimoPing) && { opacity: 0.3 }]}
+                style={[styles.icone, !isOnline(item.androidId) && { opacity: 0.3 }]}
             />
         </TouchableOpacity>
     );
@@ -95,7 +144,7 @@ export default function HomeScreen({ navigation }) {
                 <Image source={require('../../assets/avatar.png')} style={styles.avatarGrande} />
                 <View>
                     <Text style={styles.bemVindo}>Bem-vindo,</Text>
-                    <Text style={styles.nomeUsuario}>Gabriel Carvalho</Text>
+                    <Text style={styles.nomeUsuario}>{meuNome || 'Usuário'}</Text>
                 </View>
             </View>
 
@@ -112,7 +161,7 @@ export default function HomeScreen({ navigation }) {
                     <View>
                         <Text style={styles.portariaNome}>Portaria</Text>
                         <Text style={styles.portariaStatus}>
-                            {isOnline(portaria.ultimoPing) ? 'Online' : 'Offline'}
+                            {isOnline(portaria.androidId) ? 'Online' : 'Offline'}
                         </Text>
                     </View>
                     <Image source={require('../../assets/telefone-online.png')} style={styles.icone} />

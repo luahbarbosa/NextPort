@@ -4,10 +4,13 @@ import {
   SafeAreaView, Image
 } from 'react-native';
 import { useFonts, Poppins_400Regular, Poppins_600SemiBold, Poppins_700Bold } from '@expo-google-fonts/poppins';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { chamadaApi } from '../services/api';
 
 export default function HistoricoScreen() {
   const [chamadas, setChamadas] = useState([]);
+  const [erro, setErro] = useState('');
+  const [meuAndroidId, setMeuAndroidId] = useState(null);
 
   const [fontsLoaded] = useFonts({
     Poppins_400Regular,
@@ -19,12 +22,30 @@ export default function HistoricoScreen() {
     carregarHistorico();
   }, []);
 
+  const obterContatoDaChamada = (chamada) => {
+    if (!chamada.origem || !chamada.destino) return chamada.origem || chamada.destino;
+    return chamada.origem.androidId === meuAndroidId ? chamada.destino : chamada.origem;
+  };
+
+  const obterDirecaoDaChamada = (chamada) => {
+    if (!chamada.origem) return 'recebida';
+    return chamada.origem.androidId === meuAndroidId ? 'realizada' : 'recebida';
+  };
+
   const carregarHistorico = async () => {
     try {
-      const response = await chamadaApi.get('/chamadas');
+      const androidId = await AsyncStorage.getItem('androidId');
+      if (!androidId) {
+        setErro('Usuário não identificado');
+        return;
+      }
+      setMeuAndroidId(androidId);
+      const response = await chamadaApi.get(`/chamadas/por-dispositivo/${androidId}`);
       setChamadas(response.data);
+      setErro('');
     } catch (e) {
       console.log('Erro ao carregar histórico:', e.message);
+      setErro('Erro ao carregar histórico. Verifique sua conexão.');
     }
   };
 
@@ -92,7 +113,10 @@ export default function HistoricoScreen() {
         <Text style={styles.tabelaHeaderTexto}>Status / Horário</Text>
       </View>
 
-      <FlatList
+      {erro ? (
+        <Text style={styles.erro}>{erro}</Text>
+      ) : (
+        <FlatList
         data={grupos}
         keyExtractor={(item) => item.data}
         showsVerticalScrollIndicator={false}
@@ -100,17 +124,20 @@ export default function HistoricoScreen() {
         renderItem={({ item: grupo }) => (
           <View>
             <Text style={styles.dataLabel}>{grupo.data}</Text>
-            {grupo.items.map(chamada => (
+            {grupo.items.map(chamada => {
+              const contato = obterContatoDaChamada(chamada);
+              const direcao = obterDirecaoDaChamada(chamada);
+              return (
               <View key={chamada.id} style={styles.chamadaCard}>
                 <View style={styles.chamadaEsquerda}>
                   <Image source={require('../../assets/avatar.png')} style={styles.avatar} />
                   <View>
                     <Text style={styles.chamadaNome}>
-                      {chamada.origem?.nomeDispositivo || 'Desconhecido'}
+                      {contato?.residencia?.usuario?.nome || contato?.nomeDispositivo || 'Desconhecido'}
                     </Text>
                     <View style={styles.badge}>
                       <Text style={styles.badgeTexto}>
-                        {chamada.origem?.residencia?.identificador || 'Portaria'}
+                        {contato?.residencia?.identificador || 'Portaria'}
                       </Text>
                     </View>
                   </View>
@@ -122,15 +149,20 @@ export default function HistoricoScreen() {
                   <Text style={styles.horaTexto}>
                     {formatarHora(chamada.iniciadoEm)}
                   </Text>
+                  <Text style={styles.direcaoTexto}>
+                    {direcao === 'realizada' ? 'Realizada' : 'Recebida'}
+                  </Text>
                 </View>
               </View>
-            ))}
+              );
+            })}
           </View>
         )}
         ListEmptyComponent={
           <Text style={styles.vazio}>Nenhuma chamada encontrada</Text>
         }
       />
+      )}
 
 
     </SafeAreaView>
@@ -211,6 +243,19 @@ const styles = StyleSheet.create({
     fontFamily: 'Poppins_400Regular',
     fontSize: 12,
     color: '#888',
+  },
+  direcaoTexto: {
+    fontFamily: 'Poppins_400Regular',
+    fontSize: 11,
+    color: '#555',
+    marginTop: 2,
+  },
+  erro: {
+    fontFamily: 'Poppins_400Regular',
+    textAlign: 'center',
+    color: '#D32F2F',
+    marginTop: 32,
+    marginHorizontal: 20,
   },
   vazio: {
     fontFamily: 'Poppins_400Regular',

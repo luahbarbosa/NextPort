@@ -5,6 +5,8 @@ import {
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { useFonts, Poppins_400Regular, Poppins_700Bold } from '@expo-google-fonts/poppins';
+import { aceitarChamada, recusarChamada, encerrarChamada } from '../services/socketService';
+
 
 export default function ChamadaScreen({ route, navigation }) {
   // tipo: 'recebendo' ou 'chamando'
