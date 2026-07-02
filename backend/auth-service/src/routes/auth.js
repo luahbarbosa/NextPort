@@ -20,30 +20,31 @@ router.post('/register', async (req, res) => {
 
 // Login
 router.post('/login', async (req, res) => {
-    try {
-        const { email, senha } = req.body
-        const usuario = await prisma.usuario.findUnique({ where: { email } })
+  try {
+    const { email, senha } = req.body
 
-        if (!usuario) {
-            return res.status(401).json({ erro: 'Usuário não encontrado' })
-        }
+    const usuario = await prisma.usuario.findUnique({ where: { email } })
 
-        const senhaValida = await bcrypt.compare(senha, usuario.senhaHash)
-
-        if (!senhaValida) {
-            return res.status(401).json({ erro: 'Senha incorreta' })
-        }
-
-        const token = jwt.sign(
-            { id: usuario.id, email: usuario.email, role: usuario.perfil },
-            process.env.JWT_SECRET,
-            { expiresIn: '24h' }
-        )
-
-        res.json({ token })
-    } catch (err) {
-        res.status(500).json({ erro: err.message })
+    if (!usuario) {
+      return res.status(401).json({ erro: 'Usuário não encontrado' })
     }
+
+    const senhaValida = await bcrypt.compare(senha, usuario.senhaHash)
+
+    if (!senhaValida) {
+      return res.status(401).json({ erro: 'Senha incorreta' })
+    }
+
+    const token = jwt.sign(
+      { id: usuario.id, email: usuario.email, perfil: usuario.perfil, nome: usuario.nome },
+      process.env.JWT_SECRET,
+      { expiresIn: '24h' }
+    )
+
+    res.json({ token, nome: usuario.nome, id: usuario.id })
+  } catch (err) {
+    res.status(500).json({ erro: err.message })
+  }
 })
 
 module.exports = router
