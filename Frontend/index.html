@@ -1,0 +1,311 @@
+﻿<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>NexPort - Gerenciamento Central</title>
+  <link rel="stylesheet" href="src/css/styles.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@phosphor-icons/web@2.0.1/dist/phosphor.css" />
+</head>
+<body>
+  <div class="dashboard-container">
+    <aside class="sidebar">
+      <div class="sidebar-logo">
+        <div class="logo-icon"><i class="ph ph-network"></i></div>
+        <span class="logo-text">NexPort</span>
+      </div>
+      <nav class="sidebar-menu">
+        <ul class="menu-list">
+          <li class="menu-item active"><a href="#" class="menu-link"><i class="ph ph-gauge"></i><span>Gerenciamento Central</span></a></li>
+          <li class="menu-item"><a href="dispositivos.html" class="menu-link"><i class="ph ph-device-tablet"></i><span>Dispositivos</span></a></li>
+          <li class="menu-item"><a href="#" class="menu-link"><i class="ph ph-house"></i><span>Residências</span></a></li>
+          <li class="menu-item"><a href="#" class="menu-link"><i class="ph ph-phone"></i><span>Chamadas</span></a></li>
+          <li class="menu-item"><a href="#" class="menu-link"><i class="ph ph-clock-counter-clockwise"></i><span>Histórico</span></a></li>
+          <li class="menu-item"><a href="#" class="menu-link"><i class="ph ph-users"></i><span>Usuários</span></a></li>
+          <li class="menu-item"><a href="#" class="menu-link"><i class="ph ph-gear"></i><span>Configurações</span></a></li>
+        </ul>
+      </nav>
+      <div class="sidebar-footer">
+        <div class="user-profile">
+          <div class="user-avatar">LM</div>
+          <div class="user-info">
+            <p class="user-name">Laura Meneses</p>
+            <p class="user-role">Administrador</p>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <main class="main-content">
+      <header class="page-header">
+        <div class="header-left">
+          <h1 class="page-title">Gerenciamento Central</h1>
+          <p class="page-subtitle"> Sistema de Gestão de Dispositivos</p>
+        </div>
+        <div class="header-right">
+          <button class="icon-button notification-btn" type="button"><i class="ph ph-bell"></i><span class="notification-badge">3</span></button>
+        </div>
+      </header>
+
+      <!-- Conteúdo estático restaurado (cards, monitor, ações) -->
+      <div class="content-scroll" id="dashboard-content">
+        <!-- ===== CARDS DE MÉTRICAS PRINCIPAIS ===== -->
+        <section class="metrics-section">
+          <div class="metrics-grid">
+            <!-- Card 1: Total de Dispositivos -->
+            <div class="metric-card">
+              <div class="card-header">
+                <h3 class="card-title">Total de Dispositivos</h3>
+                <span class="metric-badge positive">+12%</span>
+              </div>
+              <div class="card-body">
+                <p class="metric-subtitle">cadastrados</p>
+                <p class="metric-value" id="total-devices">128</p>
+                <div class="metric-chart-mini">
+                  <svg viewBox="0 0 100 40" class="chart-line">
+                    <path d="M 0 30 Q 25 10 50 20 T 100 15" stroke="url(#gradient-green)" fill="none" stroke-width="2" />
+                    <defs>
+                      <linearGradient id="gradient-green" x1="0%" y1="0%" x2="100%" y2="0%">
+                        <stop offset="0%" style="stop-color:#10B981;stop-opacity:1" />
+                        <stop offset="100%" style="stop-color:#6EE7B7;stop-opacity:1" />
+                      </linearGradient>
+                    </defs>
+                  </svg>
+                </div>
+              </div>
+              <p class="card-comparison">vs. mês anterior</p>
+            </div>
+
+            <!-- Card 2: Dispositivos Online -->
+            <div class="metric-card">
+              <div class="card-header">
+                <h3 class="card-title">Dispositivos Online</h3>
+                <span class="metric-badge positive">+8%</span>
+              </div>
+              <div class="card-body">
+                <p class="metric-subtitle">online (75% do total)</p>
+                <p class="metric-value" id="devices-online">96</p>
+                <div class="metric-chart-mini">
+                  <svg viewBox="0 0 100 40" class="chart-line">
+                    <path d="M 0 25 Q 25 5 50 15 T 100 10" stroke="url(#gradient-green)" fill="none" stroke-width="2" />
+                  </svg>
+                </div>
+              </div>
+              <p class="card-comparison">vs. mês anterior</p>
+            </div>
+
+            <!-- Card 3: Dispositivos Offline -->
+            <div class="metric-card">
+              <div class="card-header">
+                <h3 class="card-title">Dispositivos Offline</h3>
+                <span class="metric-badge negative">-4%</span>
+              </div>
+              <div class="card-body">
+                <p class="metric-subtitle">offline (19% do total)</p>
+                <p class="metric-value" id="devices-offline">24</p>
+                <div class="metric-chart-mini">
+                  <svg viewBox="0 0 100 40" class="chart-line">
+                    <path d="M 0 15 Q 25 20 50 25 T 100 30" stroke="url(#gradient-red)" fill="none" stroke-width="2" />
+                    <defs>
+                      <linearGradient id="gradient-red" x1="0%" y1="0%" x2="100%" y2="0%">
+                        <stop offset="0%" style="stop-color:#EF4444;stop-opacity:1" />
+                        <stop offset="100%" style="stop-color:#F87171;stop-opacity:1" />
+                      </linearGradient>
+                    </defs>
+                  </svg>
+                </div>
+              </div>
+              <p class="card-comparison">vs. mês anterior</p>
+            </div>
+
+            <!-- Card 4: Conexão Instável -->
+            <div class="metric-card">
+              <div class="card-header">
+                <h3 class="card-title">Conexão Instável</h3>
+                <span class="metric-badge negative">-1%</span>
+              </div>
+              <div class="card-body">
+                <p class="metric-subtitle">instável (6% do total)</p>
+                <p class="metric-value" id="devices-unstable">8</p>
+                <div class="metric-chart-mini">
+                  <svg viewBox="0 0 100 40" class="chart-line">
+                    <path d="M 0 20 Q 25 15 50 22 T 100 18" stroke="url(#gradient-orange)" fill="none" stroke-width="2" />
+                    <defs>
+                      <linearGradient id="gradient-orange" x1="0%" y1="0%" x2="100%" y2="0%">
+                        <stop offset="0%" style="stop-color:#F59E0B;stop-opacity:1" />
+                        <stop offset="100%" style="stop-color:#FCD34D;stop-opacity:1" />
+                      </linearGradient>
+                    </defs>
+                  </svg>
+                </div>
+              </div>
+              <p class="card-comparison">vs. mês anterior</p>
+            </div>
+          </div>
+        </section>
+
+        <!-- ===== MONITOR DA REDE ===== -->
+        <section class="monitor-section">
+          <div class="monitor-card">
+            <div class="monitor-header">
+              <div class="monitor-title-block">
+                <h2 class="monitor-title">Monitor da Rede</h2>
+                <p class="monitor-description">Métricas de desempenho e saúde da rede em tempo real</p>
+              </div>
+              <div class="monitor-controls">
+                <select class="time-filter" id="time-filter">
+                  <option value="24h">Últimas 24 horas</option>
+                  <option value="7d">Últimos 7 dias</option>
+                  <option value="30d">Últimos 30 dias</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Grid de Métricas de Rede -->
+            <div class="network-metrics-grid">
+              <!-- Métrica 1: Latência Média -->
+              <div class="metric-item">
+                <div class="metric-item-header">
+                  <h4 class="metric-item-title">Latência Média</h4>
+                  <span class="metric-item-value" id="latency-value">32 ms</span>
+                </div>
+                <div class="progress-bar">
+                  <div class="progress-fill" style="width: 64%; background-color: #10B981;"></div>
+                </div>
+                <div class="metric-item-footer">
+                  <span class="metric-goal">Meta: abaixo de 50 ms</span>
+                  <span class="metric-status excellent">Excelente</span>
+                </div>
+              </div>
+
+              <!-- Métrica 2: Uso de Banda -->
+              <div class="metric-item">
+                <div class="metric-item-header">
+                  <h4 class="metric-item-title">Uso de Banda</h4>
+                  <span class="metric-item-value" id="bandwidth-value">68%</span>
+                </div>
+                <div class="progress-bar">
+                  <div class="progress-fill" style="width: 68%; background-color: #3B82F6;"></div>
+                </div>
+                <div class="metric-item-footer">
+                  <span class="metric-goal">Meta: abaixo de 80%</span>
+                  <span class="metric-status moderate">Moderado</span>
+                </div>
+              </div>
+
+              <!-- Métrica 3: Uptime do Servidor -->
+              <div class="metric-item">
+                <div class="metric-item-header">
+                  <h4 class="metric-item-title">Uptime do Servidor</h4>
+                  <span class="metric-item-value" id="uptime-value">99.9%</span>
+                </div>
+                <div class="progress-bar">
+                  <div class="progress-fill" style="width: 99.9%; background-color: #10B981;"></div>
+                </div>
+                <div class="metric-item-footer">
+                  <span class="metric-goal">Meta: acima de 99%</span>
+                  <span class="metric-status excellent">Excelente</span>
+                </div>
+              </div>
+
+              <!-- Métrica 4: Erros de Conexão -->
+              <div class="metric-item">
+                <div class="metric-item-header">
+                  <h4 class="metric-item-title">Erros de Conexão</h4>
+                  <span class="metric-item-value" id="connection-errors">12</span>
+                </div>
+                <div class="progress-bar">
+                  <div class="progress-fill" style="width: 60%; background-color: #F59E0B;"></div>
+                </div>
+                <div class="metric-item-footer">
+                  <span class="metric-goal">Meta: abaixo de 20</span>
+                  <span class="metric-status attention">Atenção</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ===== BARRA DE AÇÕES ===== -->
+        <section class="actions-section">
+          <div class="actions-card">
+            <div class="actions-header">
+              <div class="actions-title-block">
+                <h2 class="actions-title">Barra de Ações</h2>
+                <p class="actions-description">Gerenciar dispositivos e aplicar filtros</p>
+              </div>
+            </div>
+
+            <div class="actions-toolbar">
+              <!-- Search Input -->
+              <div class="search-box">
+                <i class="ph ph-magnifying-glass search-icon"></i>
+                <input
+                  type="text"
+                  class="search-input"
+                  id="search-device"
+                  placeholder="Buscar por nome do dispositivo ou residência..."
+                >
+              </div>
+
+              <!-- Filter Dropdown -->
+              <select class="filter-select" id="status-filter">
+                <option value="all">Todos os status</option>
+                <option value="online">Online</option>
+                <option value="offline">Offline</option>
+                <option value="unstable">Instável</option>
+              </select>
+
+              <!-- Primary Button -->
+              <button class="btn btn-primary" id="btn-register-device" type="button">
+                <i class="ph ph-plus"></i>
+                Cadastrar novo dispositivo
+              </button>
+            </div>
+          </div>
+        </section>
+      </div>
+    </main>
+  </div>
+
+  <!-- Modal para Cadastro de Novo Dispositivo -->
+  <div class="modal modal-hidden" id="register-modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>Cadastrar Novo Dispositivo</h2>
+        <button class="modal-close" id="close-modal" type="button">
+          <i class="ph ph-x"></i>
+        </button>
+      </div>
+      <div class="modal-body">
+        <form id="form-register-device">
+          <div class="form-group">
+            <label for="device-name">Nome do Dispositivo</label>
+            <input type="text" id="device-name" required />
+          </div>
+          <div class="form-group">
+            <label for="device-type">Tipo</label>
+            <select id="device-type" required>
+              <option value="">Selecione...</option>
+              <option value="sensor">Sensor</option>
+              <option value="switch">Interruptor</option>
+              <option value="hub">Hub</option>
+              <option value="gateway">Gateway</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="device-location">Localização/Residência</label>
+            <input type="text" id="device-location" required />
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" id="cancel-modal" type="button">Cancelar</button>
+        <button class="btn btn-primary" id="submit-modal" type="button">Cadastrar</button>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="src/js/dashboard.js"></script>
+</body>
+</html>
