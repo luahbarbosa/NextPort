@@ -6,10 +6,10 @@ require('dotenv').config()
 app.use(cors())
 app.use(express.json())
 
-const authRoutes = require('./routes/auth')
-app.use('/auth', authRoutes)
+const chamadaRoutes = require('./routes/chamadas')
+app.use('/chamadas', chamadaRoutes)
 
-const PORT = process.env.PORT || 3001
+const PORT = process.env.PORT || 3003
 app.listen(PORT, () => {
-  console.log(`Auth Service rodando na porta ${PORT}`)
+  console.log(`Chamada Service rodando na porta ${PORT}`)
 })

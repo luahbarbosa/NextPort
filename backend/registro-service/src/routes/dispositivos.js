@@ -5,7 +5,7 @@ const { prisma } = require('shared-db')
 // Listar todos
 router.get('/', async (req, res) => {
   const dispositivos = await prisma.dispositivo.findMany({
-    include: { residencia: true }
+    include: { residencia: { include: { usuario: true } } }
   })
   res.json(dispositivos)
 })
@@ -34,5 +34,20 @@ router.delete('/:id', async (req, res) => {
     res.status(400).json({ erro: err.message })
   }
 })
-
+// Buscar dispositivo pelo usuarioId
+router.get('/por-usuario/:usuarioId', async (req, res) => {
+  try {
+    const dispositivo = await prisma.dispositivo.findFirst({
+      where: {
+        residencia: {
+          usuarioId: Number(req.params.usuarioId)
+        }
+      },
+    include: { residencia: { include: { usuario: true } } }
+    })
+    res.json(dispositivo)
+  } catch (err) {
+    res.status(500).json({ erro: err.message })
+  }
+})
 module.exports = router
