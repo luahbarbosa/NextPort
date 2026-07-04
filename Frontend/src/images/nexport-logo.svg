@@ -1,0 +1,28 @@
+<svg width="480" height="120" viewBox="0 0 480 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Phone/building icon border -->
+  <rect x="4" y="8" width="82" height="104" rx="18" stroke="#FFFFFF" stroke-width="5.5" fill="none"/>
+
+  <!-- Buildings inside phone -->
+  <rect x="18" y="52" width="14" height="46" rx="3" fill="#FFFFFF"/>
+  <rect x="36" y="40" width="18" height="58" rx="3" fill="#FFFFFF"/>
+  <rect x="59" y="28" width="16" height="70" rx="3" fill="#FFFFFF"/>
+
+  <!-- Dark windows on buildings -->
+  <rect x="21" y="56" width="3" height="6" rx="1.5" fill="#0A196F"/>
+  <rect x="27" y="56" width="3" height="6" rx="1.5" fill="#0A196F"/>
+  <rect x="39" y="44" width="3" height="6" rx="1.5" fill="#0A196F"/>
+  <rect x="45" y="44" width="3" height="6" rx="1.5" fill="#0A196F"/>
+  <rect x="51" y="44" width="3" height="6" rx="1.5" fill="#0A196F"/>
+  <rect x="62" y="32" width="3" height="6" rx="1.5" fill="#0A196F"/>
+  <rect x="68" y="32" width="3" height="6" rx="1.5" fill="#0A196F"/>
+
+  <!-- WiFi/signal arcs (top right of icon) -->
+  <path d="M72 22C77 17 84 14 92 14C100 14 107 17 112 22" stroke="#F59E0B" stroke-width="4" stroke-linecap="round" fill="none"/>
+  <path d="M76 30C80 26 85 24 92 24C99 24 104 26 108 30" stroke="#F59E0B" stroke-width="4" stroke-linecap="round" fill="none"/>
+  <path d="M80 38C83 35 87 34 92 34C97 34 101 35 104 38" stroke="#F59E0B" stroke-width="4" stroke-linecap="round" fill="none"/>
+
+  <!-- Text: NexPort (Nex white + Port green, joined together) -->
+  <text x="128" y="82" font-family="'Segoe UI', Inter, Arial, sans-serif" font-size="58" font-weight="700" letter-spacing="-0.5px">
+    <tspan fill="#FFFFFF">Nex</tspan><tspan fill="#2ECC71">Port</tspan>
+  </text>
+</svg>

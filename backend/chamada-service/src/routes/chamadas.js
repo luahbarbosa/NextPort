@@ -1,6 +1,6 @@
 const express = require('express')
 const router = express.Router()
-const { prisma } = require('../../../shared-db');
+const { prisma } = require('shared-db')
 
 // Listar histórico de chamadas
 router.get('/', async (req, res) => {
@@ -60,13 +60,31 @@ router.get('/por-dispositivo/:androidId', async (req, res) => {
 // Registrar nova chamada
 router.post('/', async (req, res) => {
   try {
-    const { dispositivoOrigemId, dispositivoDestinoId, status } = req.body
+    const { dispositivoOrigemId, dispositivoDestinoId, status, origemAndroidId, destinoAndroidId } = req.body
+
+    let origemId = dispositivoOrigemId
+    let destinoId = dispositivoDestinoId
+
+    // Se vier androidId, resolvemos para o ID inteiro do banco
+    if (origemAndroidId && !origemId) {
+      const orig = await prisma.dispositivo.findUnique({ where: { androidId: origemAndroidId } })
+      if (orig) origemId = orig.id
+    }
+    if (destinoAndroidId && !destinoId) {
+      const dest = await prisma.dispositivo.findUnique({ where: { androidId: destinoAndroidId } })
+      if (dest) destinoId = dest.id
+    }
+
+    if (!origemId || !destinoId) {
+      return res.status(400).json({ erro: 'Dispositivos de origem ou destino não encontrados.' })
+    }
+
     const chamada = await prisma.chamada.create({
       data: {
-        dispositivoOrigemId,
-        dispositivoDestinoId,
+        dispositivoOrigemId: Number(origemId),
+        dispositivoDestinoId: Number(destinoId),
         iniciadoEm: new Date(),
-        status
+        status: status || 'nao_atendida'
       }
     })
     res.json(chamada)

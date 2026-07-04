@@ -1,24 +1,22 @@
-// ===== Dados iniciais =====
-const dadosIniciais = {
-  dispositivos: [
-    { id: 1, nome: 'Portaria Principal', modelo: 'Samsung A54', residencia: 'Apartamento 001 - Bloco A', tipo: 'Portaria', status: 'ONLINE', ultimoAcesso: 'Hoje, 09:35', androidId: '' },
-    { id: 2, nome: 'Portaria Secundária', modelo: 'Moto G54', residencia: 'Apartamento 102 - Bloco B', tipo: 'Portaria', status: 'OFFLINE', ultimoAcesso: 'Hoje, 08:12', androidId: '' },
-    { id: 3, nome: 'Portão Garagem', modelo: 'Redmi Note 13', residencia: 'Apartamento 203 - Bloco C', tipo: 'Portão', status: 'ONLINE', ultimoAcesso: 'Hoje, 09:22', androidId: '' },
-    { id: 4, nome: 'Recepção', modelo: 'iPhone 13', residencia: 'Apartamento 304 - Bloco D', tipo: 'Recepção', status: 'INATIVO', ultimoAcesso: 'Ontem, 18:45', androidId: '' },
-    { id: 5, nome: 'Portaria VIP', modelo: 'Samsung A54', residencia: 'Apartamento 005 - Bloco E', tipo: 'Portaria', status: 'ONLINE', ultimoAcesso: 'Hoje, 09:41', androidId: '' }
-  ]
-};
-
-// Estado da aplicação (cópia mutável dos dados + filtros ativos)
+// ===== Estado inicial =====
 const state = {
-  dispositivos: [...dadosIniciais.dispositivos],
+  dispositivos: [],
+  residencias: [],
   termoBusca: '',
   filtroStatus: 'TODOS',
-  proximoId: dadosIniciais.dispositivos.length + 1,
+  proximoId: 1,
   editandoId: null
 };
 
 // ===== Helpers de status =====
+function normalizeDeviceType(tipo) {
+  if (!tipo) return '';
+  const valor = String(tipo).trim().toLowerCase();
+  if (valor === 'portaria') return 'portaria';
+  if (valor === 'residencia' || valor === 'residencial') return 'residencia';
+  return valor;
+}
+
 function statusInfo(status) {
   switch (status) {
     case 'ONLINE':
@@ -41,7 +39,7 @@ function getDispositivosFiltrados() {
       !termo ||
       item.nome.toLowerCase().includes(termo) ||
       item.residencia.toLowerCase().includes(termo) ||
-      item.modelo.toLowerCase().includes(termo);
+      (item.modelo && item.modelo.toLowerCase().includes(termo));
 
     const correspondeStatus =
       state.filtroStatus === 'TODOS' || item.status === state.filtroStatus;
@@ -56,6 +54,15 @@ function renderDispositivos() {
   if (!tableBody) return;
 
   const lista = getDispositivosFiltrados();
+
+  if (state.dispositivos.length === 0) {
+    tableBody.innerHTML = `
+      <tr>
+        <td colspan="6" class="empty-state">Carregando...</td>
+      </tr>
+    `;
+    return;
+  }
 
   if (lista.length === 0) {
     tableBody.innerHTML = `
@@ -80,7 +87,7 @@ function renderDispositivos() {
                 </div>
               </div>
             </td>
-            <td>${item.modelo}</td>
+            <td data-col-modelo>${item.modelo || '—'}</td>
             <td>${item.residencia}</td>
             <td>
               <span class="status-pill ${className}">${label}</span>
@@ -104,6 +111,19 @@ function renderDispositivos() {
   }
 
   atualizarPaginacao(lista.length);
+  ajustarColunaModelo(lista);
+}
+
+function ajustarColunaModelo(lista) {
+  const mostrar = lista.some((item) => item.modelo);
+  document.querySelectorAll('[data-col-modelo]').forEach((element) => {
+    element.style.display = mostrar ? '' : 'none';
+  });
+
+  const headerModel = document.querySelector('th[data-col-modelo]');
+  if (headerModel) {
+    headerModel.style.display = mostrar ? '' : 'none';
+  }
 }
 
 // ===== Paginação / contador (somente exibição, sem paginação real ainda) =====
@@ -144,14 +164,68 @@ function reiniciarConexao(dispositivo) {
   renderDispositivos();
 }
 
+async function carregarDispositivos() {
+  try {
+    const [responseDispositivos, responseStatus, responseResidencias] = await Promise.all([
+      fetch(window.NexportApi?.registro('/dispositivos') || 'http://localhost:3002/dispositivos'),
+      fetch(window.NexportApi?.signaling('/status') || 'http://localhost:3004/status').catch(() => null),
+      fetch(window.NexportApi?.registro('/residencias') || 'http://localhost:3002/residencias').catch(() => null)
+    ]);
+
+    if (!responseDispositivos.ok) {
+      throw new Error(`Erro na API: ${responseDispositivos.status} ${responseDispositivos.statusText}`);
+    }
+
+    const dados = await responseDispositivos.json();
+    const statusList = responseStatus && responseStatus.ok ? await responseStatus.json() : [];
+    const connectedIds = new Set(
+      Array.isArray(statusList)
+        ? statusList.map((item) => (typeof item === 'string' ? item : item.androidId || item.id))
+        : []
+    );
+
+    if (responseResidencias && responseResidencias.ok) {
+      const residencias = await responseResidencias.json();
+      state.residencias = residencias;
+      popularSelectResidencias(residencias);
+    }
+
+    state.dispositivos = dados.map((item) => ({
+      id: item.id,
+      nome: item.nomeDispositivo,
+      modelo: item.versaoApp || item.modelo || '',
+      residencia: item.residencia?.identificador || 'Sem residência',
+      residenciaId: item.residenciaId || item.residencia?.id || '',
+      tipoValor: normalizeDeviceType(item.tipo),
+      tipo: normalizeDeviceType(item.tipo) === 'portaria' ? 'Portaria' : 'Residência',
+      status: connectedIds.has(item.androidId) ? 'ONLINE' : 'OFFLINE',
+      ultimoAcesso: item.ultimoPing ? new Date(item.ultimoPing).toLocaleString('pt-BR') : 'Sem dados',
+      androidId: item.androidId
+    }));
+
+    state.proximoId = state.dispositivos.length + 1;
+    renderDispositivos();
+  } catch (error) {
+    console.error('Erro ao carregar dispositivos:', error);
+    const tableBody = document.getElementById('devices-table-body');
+    if (tableBody) {
+      tableBody.innerHTML = `
+        <tr>
+          <td colspan="6" class="empty-state">Erro ao carregar dispositivos.</td>
+        </tr>
+      `;
+    }
+  }
+}
+
 function editarDispositivo(dispositivo) {
   state.editandoId = dispositivo.id;
 
   document.getElementById('device-name').value = dispositivo.nome;
-  document.getElementById('device-model').value = dispositivo.modelo;
-  document.getElementById('device-residence').value = dispositivo.residencia;
+  document.getElementById('device-model').value = dispositivo.modelo || '';
+  document.getElementById('device-residence').value = dispositivo.residenciaId || '';
   document.getElementById('device-android-id').value = dispositivo.androidId || '';
-  document.getElementById('device-type').value = dispositivo.tipo;
+  document.getElementById('device-type').value = dispositivo.tipoValor || '';
 
   const formPanel = document.querySelector('.form-panel');
   const formTitle = document.querySelector('.form-header h2');
@@ -168,15 +242,28 @@ function editarDispositivo(dispositivo) {
   }
 }
 
-function removerDispositivo(id) {
+async function removerDispositivo(id) {
   const dispositivo = state.dispositivos.find((d) => d.id === id);
   if (!dispositivo) return;
 
   const confirmado = window.confirm(`Remover o dispositivo "${dispositivo.nome}"?`);
   if (!confirmado) return;
 
-  state.dispositivos = state.dispositivos.filter((d) => d.id !== id);
-  renderDispositivos();
+  try {
+    const response = await fetch(`${window.NexportApi?.registro(`/dispositivos/${id}`) || `http://localhost:3002/dispositivos/${id}`}`, {
+      method: 'DELETE'
+    });
+
+    if (!response.ok) {
+      throw new Error(`Erro ao remover dispositivo: ${response.statusText}`);
+    }
+
+    state.dispositivos = state.dispositivos.filter((d) => d.id !== id);
+    renderDispositivos();
+  } catch (error) {
+    console.error('Erro ao remover dispositivo:', error);
+    alert('Não foi possível remover o dispositivo.');
+  }
 }
 
 // ===== Formulário de cadastro/edição =====
@@ -189,55 +276,94 @@ function resetFormularioParaCadastro() {
   if (formTitle) formTitle.textContent = 'Cadastrar dispositivo';
   if (submitBtn) submitBtn.textContent = 'Cadastrar';
 
+  const residenciaSelect = document.getElementById('device-residence');
+  if (residenciaSelect && state.residencias.length) {
+    residenciaSelect.value = '';
+  }
+
   state.editandoId = null;
 }
 
-function handleFormSubmit(e) {
+function popularSelectResidencias(residencias) {
+  const residenciaSelect = document.getElementById('device-residence');
+  if (!residenciaSelect) return;
+
+  residenciaSelect.innerHTML = '<option value="">Selecione a residência</option>';
+  residencias.forEach((residencia) => {
+    const option = document.createElement('option');
+    option.value = residencia.id;
+    option.textContent = residencia.identificador;
+    residenciaSelect.appendChild(option);
+  });
+}
+
+async function handleFormSubmit(e) {
   e.preventDefault();
 
   const nome = document.getElementById('device-name').value.trim();
   const modelo = document.getElementById('device-model').value.trim();
-  const residencia = document.getElementById('device-residence').value;
+  const residenciaId = document.getElementById('device-residence').value;
   const androidId = document.getElementById('device-android-id').value.trim();
-  const tipo = document.getElementById('device-type').value;
+  const tipo = normalizeDeviceType(document.getElementById('device-type').value);
 
-  if (!nome || !modelo || !residencia || !tipo) {
+  if (!nome || !residenciaId || !tipo) {
     alert('Preencha todos os campos obrigatórios.');
     return;
   }
 
-  if (state.editandoId) {
-    // Atualiza dispositivo existente
-    const dispositivo = state.dispositivos.find((d) => d.id === state.editandoId);
-    if (dispositivo) {
-      dispositivo.nome = nome;
-      dispositivo.modelo = modelo;
-      dispositivo.residencia = residencia;
-      dispositivo.androidId = androidId;
-      dispositivo.tipo = tipo;
-    }
-    alert('Dispositivo atualizado com sucesso!');
-  } else {
-    // Cria novo dispositivo
-    const novoDispositivo = {
-      id: state.proximoId++,
-      nome,
-      modelo,
-      residencia,
-      androidId,
-      tipo,
-      status: 'ONLINE',
-      ultimoAcesso: 'Agora'
-    };
-    state.dispositivos.push(novoDispositivo);
-    alert('Dispositivo cadastrado com sucesso!');
-
-    // Aqui você poderia enviar os dados para o backend:
-    // await fetch('/api/dispositivos', { method: 'POST', body: JSON.stringify(novoDispositivo) })
+  if (nome.length < 3) {
+    alert('O nome do dispositivo deve ter pelo menos 3 caracteres.');
+    return;
   }
 
-  resetFormularioParaCadastro();
-  renderDispositivos();
+  try {
+    if (state.editandoId) {
+      const response = await fetch(`${window.NexportApi?.registro(`/dispositivos/${state.editandoId}`) || `http://localhost:3002/dispositivos/${state.editandoId}`}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          nomeDispositivo: nome,
+          androidId: androidId || undefined,
+          tipo,
+          residenciaId: residenciaId ? Number(residenciaId) : null,
+          versaoApp: modelo
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error(`Erro ao atualizar dispositivo: ${response.statusText}`);
+      }
+
+      alert('Dispositivo atualizado com sucesso!');
+    } else {
+      const response = await fetch(window.NexportApi?.registro('/dispositivos') || 'http://localhost:3002/dispositivos', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          nomeDispositivo: nome,
+          androidId: androidId || `dev-${Date.now()}`,
+          tipo,
+          residenciaId
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error(`Erro ao cadastrar dispositivo: ${response.statusText}`);
+      }
+
+      alert('Dispositivo cadastrado com sucesso!');
+    }
+
+    await carregarDispositivos();
+    resetFormularioParaCadastro();
+  } catch (error) {
+    console.error('Erro ao salvar dispositivo:', error);
+    alert('Não foi possível salvar o dispositivo.');
+  }
 
   if (window.innerWidth < 1024) {
     const formPanel = document.querySelector('.form-panel');
@@ -275,7 +401,7 @@ function handleFiltrosClick() {
 
 // ===== Inicialização =====
 document.addEventListener('DOMContentLoaded', function () {
-  renderDispositivos();
+  carregarDispositivos();
 
   const btnOpenRegister = document.getElementById('btn-open-register');
   const btnCancelForm = document.getElementById('btn-cancel-form');

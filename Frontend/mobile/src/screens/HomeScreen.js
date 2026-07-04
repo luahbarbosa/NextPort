@@ -4,7 +4,7 @@ import {
     TextInput, TouchableOpacity, SafeAreaView, Image
 } from 'react-native';
 import { useFonts, Poppins_400Regular, Poppins_600SemiBold, Poppins_700Bold } from '@expo-google-fonts/poppins';
-import api from '../services/api';
+import api, { chamadaApi } from '../services/api';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { conectarSocket, chamar, desconectarSocket } from '../services/socketService';
 
@@ -45,6 +45,7 @@ export default function HomeScreen({ navigation }) {
             local: chamadaData.local,
             tipo: 'recebendo',
             deAndroidId: chamadaData.deAndroidId,
+            chamadaId: chamadaData.chamadaId,
             });
         },
         (statusData) => {
@@ -61,8 +62,8 @@ export default function HomeScreen({ navigation }) {
         try {
             const response = await api.get('/dispositivos');
             const todos = response.data;
-            const port = todos.find(d => d.tipo === 'portaria');
-            const residencias = todos.filter(d => d.tipo === 'residencia');
+            const port = todos.find(d => String(d.tipo || '').toLowerCase() === 'portaria');
+            const residencias = todos.filter(d => String(d.tipo || '').toLowerCase() === 'residencia');
             setPortaria(port);
             setDispositivos(residencias);
         } catch (e) {
@@ -70,7 +71,8 @@ export default function HomeScreen({ navigation }) {
         }
 
         try {
-            const res = await fetch('http://localhost:3004/status');
+            const socketBaseUrl = process.env.EXPO_PUBLIC_SOCKET_URL || 'http://localhost:3004';
+            const res = await fetch(`${socketBaseUrl}/status`);
             const lista = await res.json();
             const initialStatus = {};
             lista.forEach(id => { initialStatus[id] = true; });
@@ -94,15 +96,28 @@ export default function HomeScreen({ navigation }) {
     const renderContato = ({ item }) => (
         <TouchableOpacity
             style={styles.contatoCard}
-            onPress={() => {
+            onPress={async () => {
                 const nomeContato = item.residencia?.usuario?.nome || item.nomeDispositivo;
-                chamar(meuAndroidId, item.androidId, nomeContato, item.residencia?.identificador || 'Portaria');
-                navigation.navigate('Chamada', {
-                    nome: nomeContato,
-                    local: item.residencia?.identificador || 'Portaria',
-                    tipo: 'chamando',
-                    paraAndroidId: item.androidId,
-                });
+                try {
+                    const resChamada = await chamadaApi.post('/chamadas', {
+                        origemAndroidId: meuAndroidId,
+                        destinoAndroidId: item.androidId,
+                        status: 'nao_atendida'
+                    }).catch(() => ({ data: { id: null } }));
+                    const novaChamada = resChamada.data;
+
+chamar(meuAndroidId, item.androidId, nomeContato, item.residencia?.identificador || 'Portaria', novaChamada?.id);
+
+                    navigation.navigate('Chamada', {
+                        nome: nomeContato,
+                        local: item.residencia?.identificador || 'Portaria',
+                        tipo: 'chamando',
+                        paraAndroidId: item.androidId,
+                        chamadaId: novaChamada.id
+                    });
+                } catch (err) {
+                    console.log('Erro ao iniciar chamada:', err.message);
+                }
             }}
             disabled={!isOnline(item.androidId)}
         >
@@ -152,11 +167,28 @@ export default function HomeScreen({ navigation }) {
             {portaria && (
                 <TouchableOpacity
                     style={styles.portariaCard}
-                    onPress={() => navigation.navigate('Chamada', {
-                        nome: 'Portaria',
-                        local: 'Portaria Principal',
-                        tipo: 'chamando'
-                    })}
+                    onPress={async () => {
+                        try {
+                            const resChamada = await chamadaApi.post('/chamadas', {
+                                origemAndroidId: meuAndroidId,
+                                destinoAndroidId: portaria.androidId,
+                                status: 'nao_atendida'
+                            }).catch(() => ({ data: { id: null } }));
+                            const novaChamada = resChamada.data;
+
+                            chamar(meuAndroidId, portaria.androidId, 'Portaria', 'Portaria Principal', novaChamada?.id);
+
+                            navigation.navigate('Chamada', {
+                                nome: 'Portaria',
+                                local: 'Portaria Principal',
+                                tipo: 'chamando',
+                                paraAndroidId: portaria.androidId,
+                                chamadaId: novaChamada??.id
+                            });
+                        } catch (err) {
+                            console.log('Erro ao iniciar chamada para portaria:', err.message);
+                        }
+                    }}
                 >
                     <View>
                         <Text style={styles.portariaNome}>Portaria</Text>

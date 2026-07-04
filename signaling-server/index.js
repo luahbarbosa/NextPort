@@ -38,15 +38,16 @@ io.on('connection', (socket) => {
   })
 
   // Iniciar chamada
-  socket.on('chamar', ({ deAndroidId, paraAndroidId, nome, local }) => {
+  socket.on('chamar', ({ deAndroidId, paraAndroidId, nome, local, chamadaId }) => {
     const socketDestino = dispositivosConectados[paraAndroidId]
 
     if (socketDestino) {
-      console.log(`Chamada de ${deAndroidId} para ${paraAndroidId}`)
+      console.log(`Chamada de ${deAndroidId} para ${paraAndroidId} (ID DB: ${chamadaId})`)
       io.to(socketDestino).emit('chamada_recebida', {
         deAndroidId,
         nome,
-        local
+        local,
+        chamadaId
       })
     } else {
       socket.emit('dispositivo_offline', { paraAndroidId })
@@ -91,10 +92,7 @@ io.on('connection', (socket) => {
 })
 
 app.get('/status', (req, res) => {
-  res.json({
-    dispositivosOnline: Object.keys(dispositivosConectados),
-    total: Object.keys(dispositivosConectados).length
-  })
+  res.json(Object.keys(dispositivosConectados))
 })
 
 const PORT = process.env.PORT || 3004

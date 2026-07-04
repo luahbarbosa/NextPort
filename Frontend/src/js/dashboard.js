@@ -6,29 +6,29 @@
  * @version 1.0.0
  */
 
-// ===== MOCK DATA & ESTADO LOCAL =====
-const mockData = {
+// ===== DADOS INICIAIS E ESTADO LOCAL =====
+const initialDashboardData = {
     user: {
         name: "Laura Meneses",
         role: "Administrador",
         avatar: "LM"
     },
     metrics: {
-        totalDevices: 128,
-        devicesOnline: 96,
-        devicesOffline: 24,
-        devicesUnstable: 8,
-        onlinePercentage: 75,
-        offlinePercentage: 19,
-        unstablePercentage: 6
+        totalDevices: 0,
+        devicesOnline: 0,
+        devicesOffline: 0,
+        devicesUnstable: 0,
+        onlinePercentage: 0,
+        offlinePercentage: 0,
+        unstablePercentage: 0
     },
     networkMonitor: {
-        latency: 32, // ms
-        bandwidth: 68, // %
-        uptime: 99.9, // %
-        connectionErrors: 12
+        latency: 0,
+        bandwidth: 0,
+        uptime: 0,
+        connectionErrors: 0
     },
-    notifications: 3,
+    notifications: 0,
     timeFilter: "24h",
     statusFilter: "all"
 };
@@ -76,7 +76,7 @@ class DashboardState {
 }
 
 // Instância global do estado
-let dashboardState = new DashboardState(mockData);
+let dashboardState = new DashboardState(initialDashboardData);
 
 // ===== FUNÇÕES DE RENDERIZAÇÃO =====
 
@@ -84,6 +84,14 @@ let dashboardState = new DashboardState(mockData);
  * Renderiza as métricas principais na tela
  * @param {Object} metrics - Objeto com dados de métricas
  */
+function normalizeDeviceType(tipo) {
+    if (!tipo) return '';
+    const valor = String(tipo).trim().toLowerCase();
+    if (valor === 'portaria') return 'portaria';
+    if (valor === 'residencia' || valor === 'residencial') return 'residencia';
+    return valor;
+}
+
 function renderMetrics(metrics) {
     try {
         // Atualizar cards de métricas
@@ -103,8 +111,6 @@ function renderMetrics(metrics) {
                 setTimeout(() => element.classList.remove('updating'), 300);
             }
         });
-
-        console.log('✓ Métricas principais renderizadas:', metrics);
     } catch (error) {
         console.error('Erro ao renderizar métricas:', error);
     }
@@ -129,8 +135,6 @@ function renderNetworkMonitor(networkMonitor) {
                 element.innerText = value;
             }
         });
-
-        console.log('✓ Monitor de rede renderizado:', networkMonitor);
     } catch (error) {
         console.error('Erro ao renderizar monitor de rede:', error);
     }
@@ -144,7 +148,6 @@ function renderDashboard(data) {
     renderMetrics(data.metrics);
     renderNetworkMonitor(data.networkMonitor);
     updateNotificationBadge(data.notifications);
-    console.log('✓ Dashboard renderizado completamente');
 }
 
 /**
@@ -163,6 +166,16 @@ function updateNotificationBadge(count) {
     }
 }
 
+function setDashboardLoading() {
+    const elements = ['total-devices', 'devices-online', 'devices-offline', 'devices-unstable'];
+    elements.forEach((id) => {
+        const element = document.getElementById(id);
+        if (element) {
+            element.innerText = 'Carregando...';
+        }
+    });
+}
+
 // ===== FUNÇÕES DE FETCH & API =====
 
 /**
@@ -173,68 +186,53 @@ function updateNotificationBadge(count) {
  */
 async function fetchDashboardData() {
     try {
-        console.log('⏳ Buscando dados do dashboard...');
-        
-        // Simular latência de rede
-        await new Promise(resolve => setTimeout(resolve, 800));
+        const [dispositivosResponse, statusResponse] = await Promise.all([
+            fetch(window.NexportApi?.registro('/dispositivos') || 'http://localhost:3002/dispositivos'),
+            fetch(window.NexportApi?.signaling('/status') || 'http://localhost:3004/status').catch(() => null)
+        ]);
 
-        // ===== INTEGRAÇÃO COM API REST =====
-        // Descomente e configure o endpoint real quando integrar com backend:
-        /*
-        const response = await fetch('https://api.nexport.com/v1/dashboard', {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${localStorage.getItem('authToken')}`
-            },
-            timeout: 10000
-        });
-
-        if (!response.ok) {
-            throw new Error(`Erro na API: ${response.status} ${response.statusText}`);
+        if (!dispositivosResponse.ok) {
+            throw new Error(`Erro na API: ${dispositivosResponse.status} ${dispositivosResponse.statusText}`);
         }
 
-        const data = await response.json();
-        return data;
-        */
+        const dispositivos = await dispositivosResponse.json();
+        const statusList = statusResponse && statusResponse.ok ? await statusResponse.json() : [];
+        const connectedIds = new Set(
+            Array.isArray(statusList)
+                ? statusList.map((item) => (typeof item === 'string' ? item : item.androidId || item.id))
+                : []
+        );
 
-        // Retornar dados mock temporariamente
-        console.log('✓ Dados do dashboard carregados (mock)');
-        return mockData;
+        const totalDevices = dispositivos.length;
+        const devicesOnline = dispositivos.filter((item) => connectedIds.has(item.androidId)).length;
+        const devicesOffline = Math.max(totalDevices - devicesOnline, 0);
+        const devicesUnstable = 0;
+
+        const data = {
+            ...initialDashboardData,
+            metrics: {
+                totalDevices,
+                devicesOnline,
+                devicesOffline,
+                devicesUnstable,
+                onlinePercentage: totalDevices ? Math.round((devicesOnline / totalDevices) * 100) : 0,
+                offlinePercentage: totalDevices ? Math.round((devicesOffline / totalDevices) * 100) : 0,
+                unstablePercentage: totalDevices ? Math.round((devicesUnstable / totalDevices) * 100) : 0
+            },
+            networkMonitor: {
+                latency: 0,
+                bandwidth: 0,
+                uptime: 100,
+                connectionErrors: 0
+            },
+            notifications: 0
+        };
+
+        return data;
 
     } catch (error) {
         console.error('❌ Erro ao buscar dados do dashboard:', error);
-        // Retornar dados mock em caso de erro
-        return mockData;
-    }
-}
-
-/**
- * Fetch para buscar métricas de rede em tempo real
- */
-async function fetchNetworkMetrics() {
-    try {
-        console.log('⏳ Buscando métricas de rede...');
-        
-        await new Promise(resolve => setTimeout(resolve, 600));
-
-        // ===== INTEGRAÇÃO COM API REST =====
-        /*
-        const response = await fetch('https://api.nexport.com/v1/network-metrics', {
-            headers: {
-                'Authorization': `Bearer ${localStorage.getItem('authToken')}`
-            }
-        });
-        const data = await response.json();
-        return data;
-        */
-
-        console.log('✓ Métricas de rede carregadas (mock)');
-        return mockData.networkMonitor;
-
-    } catch (error) {
-        console.error('❌ Erro ao buscar métricas de rede:', error);
-        return mockData.networkMonitor;
+        return initialDashboardData;
     }
 }
 
@@ -243,17 +241,17 @@ async function fetchNetworkMetrics() {
  */
 async function registerNewDevice(deviceData) {
     try {
-        console.log('⏳ Registrando novo dispositivo...');
-
-        // ===== INTEGRAÇÃO COM API REST =====
-        /*
-        const response = await fetch('https://api.nexport.com/v1/devices', {
+        const response = await fetch(window.NexportApi?.registro('/dispositivos') || 'http://localhost:3002/dispositivos', {
             method: 'POST',
             headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+                'Content-Type': 'application/json'
             },
-            body: JSON.stringify(deviceData)
+            body: JSON.stringify({
+                nomeDispositivo: deviceData.name,
+                androidId: deviceData.androidId || `${Date.now()}`,
+                tipo: normalizeDeviceType(deviceData.type),
+                residenciaId: deviceData.residenciaId || null
+            })
         });
 
         if (!response.ok) {
@@ -261,23 +259,7 @@ async function registerNewDevice(deviceData) {
         }
 
         const newDevice = await response.json();
-        console.log('✓ Dispositivo registrado:', newDevice);
         return newDevice;
-        */
-
-        // Simular sucesso com dados mock
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        console.log('✓ Dispositivo registrado (mock):', deviceData);
-        
-        // Atualizar estado local incrementando total de dispositivos
-        const currentState = dashboardState.getState();
-        const updatedMetrics = {
-            ...currentState.metrics,
-            totalDevices: currentState.metrics.totalDevices + 1
-        };
-        dashboardState.updateState({ metrics: updatedMetrics });
-
-        return { id: Math.random(), ...deviceData, createdAt: new Date() };
 
     } catch (error) {
         console.error('❌ Erro ao registrar dispositivo:', error);
@@ -290,29 +272,38 @@ async function registerNewDevice(deviceData) {
  */
 async function fetchDevices(filters = {}) {
     try {
-        console.log('⏳ Buscando dispositivos com filtros:', filters);
+        const queryParams = new URLSearchParams();
+        if (filters.status && filters.status !== 'all') {
+            queryParams.set('status', filters.status);
+        }
+        if (filters.search) {
+            queryParams.set('search', filters.search);
+        }
 
-        // ===== INTEGRAÇÃO COM API REST =====
-        /*
-        const queryParams = new URLSearchParams(filters).toString();
-        const response = await fetch(`https://api.nexport.com/v1/devices?${queryParams}`, {
-            headers: {
-                'Authorization': `Bearer ${localStorage.getItem('authToken')}`
-            }
-        });
-        const devices = await response.json();
-        return devices;
-        */
+        const [dispositivosResponse, statusResponse] = await Promise.all([
+            fetch(`${window.NexportApi?.registro('/dispositivos') || 'http://localhost:3002/dispositivos'}${queryParams.toString() ? `?${queryParams.toString()}` : ''}`),
+            fetch(window.NexportApi?.signaling('/status') || 'http://localhost:3004/status').catch(() => null)
+        ]);
 
-        await new Promise(resolve => setTimeout(resolve, 600));
-        console.log('✓ Dispositivos carregados (mock)');
-        
-        // Simular dispositivos mock
-        return [
-            { id: 1, name: 'Sensor Sala', type: 'sensor', location: 'Sala Principal', status: 'online' },
-            { id: 2, name: 'Luz Quarto', type: 'switch', location: 'Quarto', status: 'online' },
-            { id: 3, name: 'Câmera Entrada', type: 'camera', location: 'Entrada', status: 'offline' }
-        ];
+        if (!dispositivosResponse.ok) {
+            throw new Error(`Erro na API: ${dispositivosResponse.status} ${dispositivosResponse.statusText}`);
+        }
+
+        const devices = await dispositivosResponse.json();
+        const statusList = statusResponse && statusResponse.ok ? await statusResponse.json() : [];
+        const connectedIds = new Set(
+            Array.isArray(statusList)
+                ? statusList.map((item) => (typeof item === 'string' ? item : item.androidId || item.id))
+                : []
+        );
+
+        return devices.map((item) => ({
+            id: item.id,
+            name: item.nomeDispositivo,
+            type: item.tipo,
+            location: item.residencia?.identificador || 'Sem residência',
+            status: connectedIds.has(item.androidId) ? 'online' : 'offline'
+        }));
 
     } catch (error) {
         console.error('❌ Erro ao buscar dispositivos:', error);
@@ -326,9 +317,8 @@ async function fetchDevices(filters = {}) {
  * Inicializa o dashboard e seus event listeners
  */
 function initializeDashboard() {
-    console.log('🚀 Inicializando Dashboard NexPort...');
-
     // Carregar dados inicialmente
+    carregarResidenciasDashboard();
     loadDashboardData();
 
     // Inscrever renderização automática em mudanças de estado
@@ -342,7 +332,6 @@ function initializeDashboard() {
     // Atualizar dados periodicamente (a cada 30 segundos)
     setInterval(loadDashboardData, 30000);
 
-    console.log('✓ Dashboard inicializado com sucesso');
 }
 
 /**
@@ -350,6 +339,7 @@ function initializeDashboard() {
  */
 async function loadDashboardData() {
     try {
+        setDashboardLoading();
         const data = await fetchDashboardData();
         dashboardState.updateState(data);
     } catch (error) {
@@ -428,7 +418,6 @@ function setupEventListeners() {
         }
     });
 
-    console.log('✓ Event listeners configurados');
 }
 
 // ===== HANDLERS DE EVENTOS =====
@@ -459,6 +448,29 @@ function closeRegisterModal() {
 /**
  * Reseta o formulário de cadastro
  */
+async function carregarResidenciasDashboard() {
+    try {
+        const response = await fetch(window.NexportApi?.registro('/residencias') || 'http://localhost:3002/residencias');
+        if (!response.ok) {
+            throw new Error(`Erro ao buscar residências: ${response.statusText}`);
+        }
+
+        const residencias = await response.json();
+        const selectResidencia = document.getElementById('device-location');
+        if (!selectResidencia) return;
+
+        selectResidencia.innerHTML = '<option value="">Selecione a residência</option>';
+        residencias.forEach((residencia) => {
+            const option = document.createElement('option');
+            option.value = residencia.id;
+            option.textContent = residencia.identificador;
+            selectResidencia.appendChild(option);
+        });
+    } catch (error) {
+        console.error('Erro ao carregar residências:', error);
+    }
+}
+
 function resetForm() {
     const form = document.getElementById('form-register-device');
     if (form) {
@@ -478,12 +490,17 @@ async function submitRegisterForm() {
         const deviceData = {
             name: formData.get('device-name') || document.getElementById('device-name').value,
             type: formData.get('device-type') || document.getElementById('device-type').value,
-            location: formData.get('device-location') || document.getElementById('device-location').value
+            residenciaId: formData.get('device-location') || document.getElementById('device-location').value
         };
 
         // Validação básica
-        if (!deviceData.name || !deviceData.type || !deviceData.location) {
-            alert('Por favor, preencha todos os campos');
+        if (!deviceData.name || !deviceData.type || !deviceData.residenciaId) {
+            alert('Por favor, preencha todos os campos obrigatórios.');
+            return;
+        }
+
+        if (deviceData.name.trim().length < 3) {
+            alert('O nome do dispositivo deve ter pelo menos 3 caracteres.');
             return;
         }
 
@@ -507,9 +524,7 @@ async function submitRegisterForm() {
  * Handler para filtro de status
  */
 async function handleStatusFilter(status) {
-    console.log('Filtro de status alterado:', status);
-    const devices = await fetchDevices({ status: status !== 'all' ? status : undefined });
-    console.log('Dispositivos filtrados:', devices);
+    await fetchDevices({ status: status !== 'all' ? status : undefined });
 }
 
 /**
@@ -517,19 +532,16 @@ async function handleStatusFilter(status) {
  */
 async function handleSearch(searchTerm) {
     if (!searchTerm.trim()) {
-        console.log('Busca limpa');
         return;
     }
-    console.log('Buscando:', searchTerm);
-    const devices = await fetchDevices({ search: searchTerm });
-    console.log('Resultados da busca:', devices);
+
+    await fetchDevices({ search: searchTerm });
 }
 
 /**
  * Handler para filtro de tempo
  */
-function handleTimeFilter(timeFrame) {
-    console.log('Período de tempo alterado:', timeFrame);
+function handleTimeFilter() {
     // Aqui você implementaria a lógica para buscar dados do período selecionado
 }
 
@@ -544,56 +556,6 @@ function debounce(func, delay) {
         clearTimeout(timeoutId);
         timeoutId = setTimeout(() => func(...args), delay);
     };
-}
-
-/**
- * Throttle para limitar chamadas de funções
- */
-function throttle(func, limit) {
-    let inThrottle;
-    return function (...args) {
-        if (!inThrottle) {
-            func(...args);
-            inThrottle = true;
-            setTimeout(() => inThrottle = false, limit);
-        }
-    };
-}
-
-/**
- * Formata número para exibição
- */
-function formatNumber(num) {
-    return new Intl.NumberFormat('pt-BR').format(num);
-}
-
-/**
- * Formata percentual
- */
-function formatPercentage(value) {
-    return `${(value * 100).toFixed(2)}%`;
-}
-
-/**
- * Logger com timestamp
- */
-function log(message, type = 'info') {
-    const timestamp = new Date().toLocaleTimeString();
-    const prefix = `[${timestamp}] Dashboard:`;
-    
-    switch (type) {
-        case 'error':
-            console.error(`❌ ${prefix} ${message}`);
-            break;
-        case 'warning':
-            console.warn(`⚠️ ${prefix} ${message}`);
-            break;
-        case 'success':
-            console.log(`✓ ${prefix} ${message}`);
-            break;
-        default:
-            console.log(`ℹ️ ${prefix} ${message}`);
-    }
 }
 
 // ===== INICIALIZAÇÃO AO CARREGAR PÁGINA =====

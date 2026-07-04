@@ -50,4 +50,25 @@ router.get('/por-usuario/:usuarioId', async (req, res) => {
     res.status(500).json({ erro: err.message })
   }
 })
+
+// Editar
+router.put('/:id', async (req, res) => {
+  try {
+    const { nomeDispositivo, androidId, tipo, residenciaId, versaoApp } = req.body
+    const dispositivo = await prisma.dispositivo.update({
+      where: { id: Number(req.params.id) },
+      data: {
+        nomeDispositivo,
+        androidId,
+        tipo,
+        residenciaId: residenciaId ? Number(residenciaId) : null,
+        versaoApp
+      }
+    })
+    res.json(dispositivo)
+  } catch (err) {
+    res.status(400).json({ erro: err.message })
+  }
+})
+
 module.exports = router

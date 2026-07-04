@@ -1,16 +1,19 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   View, Text, TouchableOpacity, StyleSheet, Image, SafeAreaView
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { useFonts, Poppins_400Regular, Poppins_700Bold } from '@expo-google-fonts/poppins';
-import { aceitarChamada, recusarChamada, encerrarChamada } from '../services/socketService';
-
+import { aceitarChamada, recusarChamada, encerrarChamada, getSocket } from '../services/socketService';
+import { chamadaApi } from '../services/api';
 
 export default function ChamadaScreen({ route, navigation }) {
-  // tipo: 'recebendo' ou 'chamando'
-  const { nome, local, tipo } = route.params;
+  const params = route.params || {};
+  const { nome = 'Desconhecido', local = 'Local não informado', tipo = 'recebendo', deAndroidId, paraAndroidId, chamadaId } = params;
+  
+  const destinoAndroidId = deAndroidId || paraAndroidId;
+  const [fase, setFase] = useState(tipo); // 'recebendo', 'chamando', 'conversando'
   const [statusTexto, setStatusTexto] = useState(tipo === 'chamando' ? 'chamando...' : '');
 
   const [fontsLoaded] = useFonts({
@@ -18,19 +21,102 @@ export default function ChamadaScreen({ route, navigation }) {
     Poppins_700Bold,
   });
 
+  useEffect(() => {
+    const socket = getSocket();
+    if (socket) {
+      socket.on('chamada_aceita', () => {
+        setStatusTexto('em chamada...');
+        setFase('conversando');
+      });
+
+      socket.on('chamada_recusada', () => {
+        setStatusTexto('chamada recusada');
+        setTimeout(() => {
+          navigation.goBack();
+        }, 1500);
+      });
+
+      socket.on('chamada_encerrada', () => {
+        setStatusTexto('chamada encerrada');
+        setTimeout(() => {
+          navigation.goBack();
+        }, 1500);
+      });
+
+      socket.on('dispositivo_offline', () => {
+        setStatusTexto('dispositivo offline');
+        setTimeout(() => {
+          navigation.goBack();
+        }, 1500);
+      });
+    }
+
+    return () => {
+      const socket = getSocket();
+      if (socket) {
+        socket.off('chamada_aceita');
+        socket.off('chamada_recusada');
+        socket.off('chamada_encerrada');
+        socket.off('dispositivo_offline');
+      }
+    };
+  }, []);
+
+  const handleAceitar = async () => {
+    try {
+      if (chamadaId) {
+        await chamadaApi.patch(`/chamadas/${chamadaId}`, {
+          status: 'atendida',
+          atendidoEm: new Date()
+        });
+      }
+      if (destinoAndroidId) {
+        aceitarChamada(destinoAndroidId, chamadaId);
+      }
+      setFase('conversando');
+      setStatusTexto('em chamada...');
+    } catch (err) {
+      console.log('Erro ao aceitar chamada:', err?.message || 'Erro');
+      navigation.goBack();
+    }
+  };
+
+  const handleRecusar = async () => {
+    try {
+      if (chamadaId) {
+        await chamadaApi.patch(`/chamadas/${chamadaId}`, {
+          status: 'recusada',
+          encerradoEm: new Date()
+        });
+      }
+      if (destinoAndroidId) {
+        recusarChamada(destinoAndroidId, chamadaId);
+      }
+      navigation.goBack();
+    } catch (err) {
+      console.log('Erro ao recusar chamada:', err?.message || 'Erro');
+      navigation.goBack();
+    }
+  };
+
+  const handleEncerrar = async () => {
+    try {
+      if (chamadaId) {
+        await chamadaApi.patch(`/chamadas/${chamadaId}`, {
+          encerradoEm: new Date()
+        });
+      }
+      if (destinoAndroidId) {
+        encerrarChamada(destinoAndroidId, chamadaId);
+      }
+      navigation.goBack();
+    } catch (err) {
+      console.log('Erro ao encerrar chamada:', err?.message || 'Erro');
+      navigation.goBack();
+    }
+  };
+
   if (!fontsLoaded) return null;
-
-  const handleAceitar = () => {
-    // Aqui entra a conexão via socket.io
-    console.log('Chamada aceita');
-    navigation.goBack();
-  };
-
-  const handleEncerrar = () => {
-    // Aqui entra o evento de encerrar via socket.io
-    console.log('Chamada encerrada');
-    navigation.goBack();
-  };
 
   return (
     <LinearGradient
@@ -44,7 +130,7 @@ export default function ChamadaScreen({ route, navigation }) {
         </TouchableOpacity>
 
         <View style={styles.topo}>
-          {tipo === 'chamando' && (
+          {(fase === 'chamando' || fase === 'conversando') && (
             <Text style={styles.statusTexto}>{statusTexto}</Text>
           )}
         </View>
@@ -61,15 +147,22 @@ export default function ChamadaScreen({ route, navigation }) {
         </View>
 
         <View style={styles.botoes}>
-          {tipo === 'recebendo' && (
-            <TouchableOpacity style={[styles.botaoCircular, styles.botaoVerde]} onPress={handleAceitar}>
-              <Ionicons name="call" size={30} color="#fff" />
-            </TouchableOpacity>
+          {fase === 'recebendo' && (
+            <>
+              <TouchableOpacity style={[styles.botaoCircular, styles.botaoVerde]} onPress={handleAceitar}>
+                <Ionicons name="call" size={30} color="#fff" />
+              </TouchableOpacity>
+              <TouchableOpacity style={[styles.botaoCircular, styles.botaoVermelho]} onPress={handleRecusar}>
+                <Ionicons name="call" size={30} color="#fff" style={{ transform: [{ rotate: '135deg' }] }} />
+              </TouchableOpacity>
+            </>
           )}
 
-          <TouchableOpacity style={[styles.botaoCircular, styles.botaoVermelho]} onPress={handleEncerrar}>
-            <Ionicons name="call" size={30} color="#fff" style={{ transform: [{ rotate: '135deg' }] }} />
-          </TouchableOpacity>
+          {(fase === 'chamando' || fase === 'conversando') && (
+            <TouchableOpacity style={[styles.botaoCircular, styles.botaoVermelho]} onPress={handleEncerrar}>
+              <Ionicons name="call" size={30} color="#fff" style={{ transform: [{ rotate: '135deg' }] }} />
+            </TouchableOpacity>
+          )}
         </View>
 
       </SafeAreaView>

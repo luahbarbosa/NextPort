@@ -139,43 +139,46 @@ async function main() {
   });
 
   // 4. Criar Chamadas de Exemplo
-  const agora = new Date();
-  const cincoMinAtras = new Date(agora.getTime() - 5 * 60000);
-  const dezMinAtras = new Date(agora.getTime() - 10 * 60000);
+  const chamadasCount = await prisma.chamada.count();
+  if (chamadasCount === 0) {
+    const agora = new Date();
+    const cincoMinAtras = new Date(agora.getTime() - 5 * 60000);
+    const dezMinAtras = new Date(agora.getTime() - 10 * 60000);
 
-  // Chamada Atendida (Portaria -> Apto 1)
-  await prisma.chamada.create({
-    data: {
-      dispositivoOrigemId: portaria.id,
-      dispositivoDestinoId: dispApto001.id,
-      iniciadoEm: dezMinAtras,
-      atendidoEm: new Date(dezMinAtras.getTime() + 15000),
-      encerradoEm: new Date(dezMinAtras.getTime() + 60000),
-      status: 'atendida',
-    },
-  });
+    // Chamada Atendida (Portaria -> Apto 1)
+    await prisma.chamada.create({
+      data: {
+        dispositivoOrigemId: portaria.id,
+        dispositivoDestinoId: dispApto001.id,
+        iniciadoEm: dezMinAtras,
+        atendidoEm: new Date(dezMinAtras.getTime() + 15000),
+        encerradoEm: new Date(dezMinAtras.getTime() + 60000),
+        status: 'atendida',
+      },
+    });
 
-  // Chamada Não Atendida (Portaria -> Apto 2)
-  await prisma.chamada.create({
-    data: {
-      dispositivoOrigemId: portaria.id,
-      dispositivoDestinoId: dispApto002.id,
-      iniciadoEm: cincoMinAtras,
-      status: 'nao_atendida',
-    },
-  });
+    // Chamada Não Atendida (Portaria -> Apto 2)
+    await prisma.chamada.create({
+      data: {
+        dispositivoOrigemId: portaria.id,
+        dispositivoDestinoId: dispApto002.id,
+        iniciadoEm: cincoMinAtras,
+        status: 'nao_atendida',
+      },
+    });
 
-  // Chamada Recusada (Portaria -> Apto 3)
-  await prisma.chamada.create({
-    data: {
-      dispositivoOrigemId: portaria.id,
-      dispositivoDestinoId: dispApto003.id,
-      iniciadoEm: agora,
-      atendidoEm: new Date(agora.getTime() + 10000),
-      encerradoEm: new Date(agora.getTime() + 10000),
-      status: 'recusada',
-    },
-  });
+    // Chamada Recusada (Portaria -> Apto 3)
+    await prisma.chamada.create({
+      data: {
+        dispositivoOrigemId: portaria.id,
+        dispositivoDestinoId: dispApto003.id,
+        iniciadoEm: agora,
+        atendidoEm: new Date(agora.getTime() + 10000),
+        encerradoEm: new Date(agora.getTime() + 10000),
+        status: 'recusada',
+      },
+    });
+  }
 
   console.log('Seed executado com sucesso!');
 }

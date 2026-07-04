@@ -28,28 +28,25 @@ const handleLogin = async () => {
 
   setLoading(true);
   try {
-    // 1. Login
     const response = await authApi.post('/auth/login', { email, senha });
     const { token, nome, id } = response.data;
 
-    // 2. Salva dados do usuário
     await AsyncStorage.setItem('token', token);
     await AsyncStorage.setItem('nomeUsuario', nome);
     await AsyncStorage.setItem('usuarioId', String(id));
 
-    // 3. Busca dispositivo associado ao usuário
-    const dispResponse = await registroApi.get(`/dispositivos/por-usuario/${id}`);
+    const dispResponse = await registroApi.get(`/dispositivos/por-usuario/${id}`).catch(() => ({ data: null }));
     const dispositivo = dispResponse.data;
 
-    if (dispositivo) {
+    if (dispositivo?.androidId) {
       await AsyncStorage.setItem('androidId', dispositivo.androidId);
       await AsyncStorage.setItem('localDispositivo', dispositivo.residencia?.identificador || 'Portaria');
     }
 
     navigation.replace('MainTabs');
   } catch (e) {
-    console.log(e.message);
-    Alert.alert('Erro', 'E-mail ou senha incorretos');
+    console.log(e?.message || 'Erro de login');
+    Alert.alert('Erro', 'Não foi possível entrar. Verifique as credenciais ou a conexão com o backend.');
   } finally {
     setLoading(false);
   }

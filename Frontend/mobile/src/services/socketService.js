@@ -1,6 +1,6 @@
 import { io } from 'socket.io-client';
 
-const SOCKET_URL = 'http://localhost:3004';
+const SOCKET_URL = process.env.EXPO_PUBLIC_SOCKET_URL || 'http://localhost:3004';
 
 let socket = null;
 
@@ -47,27 +47,27 @@ export const conectarSocket = (androidId, onChamadaRecebida, onStatusAtualizado)
   return socket;
 };
 
-export const chamar = (deAndroidId, paraAndroidId, nome, local) => {
+export const chamar = (deAndroidId, paraAndroidId, nome, local, chamadaId = null) => {
   if (socket) {
-    socket.emit('chamar', { deAndroidId, paraAndroidId, nome, local });
+    socket.emit('chamar', { deAndroidId, paraAndroidId, nome, local, chamadaId });
   }
 };
 
-export const aceitarChamada = (paraAndroidId) => {
+export const aceitarChamada = (androidId, chamadaId = null) => {
   if (socket) {
-    socket.emit('aceitar_chamada', { paraAndroidId });
+    socket.emit('aceitar_chamada', { paraAndroidId: androidId, chamadaId });
   }
 };
 
-export const recusarChamada = (paraAndroidId) => {
+export const recusarChamada = (androidId, chamadaId = null) => {
   if (socket) {
-    socket.emit('recusar_chamada', { paraAndroidId });
+    socket.emit('recusar_chamada', { paraAndroidId: androidId, chamadaId });
   }
 };
 
-export const encerrarChamada = (paraAndroidId) => {
+export const encerrarChamada = (androidId, chamadaId = null) => {
   if (socket) {
-    socket.emit('encerrar_chamada', { paraAndroidId });
+    socket.emit('encerrar_chamada', { paraAndroidId: androidId, chamadaId });
   }
 };
 

@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>NexPort - Meu Perfil</title>
+  <link rel="stylesheet" href="src/css/styles.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@phosphor-icons/web@2.0.1/dist/phosphor.css" />
+</head>
+<body>
+  <div class="dashboard-container">
+    <aside class="sidebar">
+      <div class="sidebar-logo">
+        <img src="src/images/nexport-logo.svg" alt="NexPort" class="sidebar-brand-image" />
+      </div>
+      <nav class="sidebar-menu">
+        <ul class="menu-list">
+          <li class="menu-item"><a href="index.html" class="menu-link"><i class="ph ph-gauge"></i><span>Gerenciamento Central</span></a></li>
+          <li class="menu-item"><a href="dispositivos.html" class="menu-link"><i class="ph ph-device-tablet"></i><span>Dispositivos</span></a></li>
+        </ul>
+      </nav>
+    </aside>
+
+    <main class="main-content">
+      <header class="page-header">
+        <div class="header-left">
+          <h1 class="page-title">Meu Perfil</h1>
+          <p class="page-subtitle">Atualize seus dados pessoais e mantenha suas informações em dia.</p>
+        </div>
+        <div class="header-right">
+          <details class="profile-menu">
+            <summary class="profile-trigger">
+              <span class="profile-avatar">LM</span>
+              <span class="profile-text">
+                <strong>Laura Meneses</strong>
+                <small>Administrador</small>
+              </span>
+              <i class="ph ph-caret-down"></i>
+            </summary>
+            <div class="profile-dropdown">
+              <a href="perfil.html" class="profile-action"><i class="ph ph-user-circle"></i><span>Meu Perfil</span></a>
+              <a href="senha.html" class="profile-action"><i class="ph ph-lock-key"></i><span>Alterar Senha</span></a>
+              <a href="#" id="logout-link" class="profile-action profile-action-logout"><i class="ph ph-sign-out"></i><span>Sair</span></a>
+            </div>
+          </details>
+        </div>
+      </header>
+
+      <div class="content-scroll">
+        <section class="profile-card">
+          <div class="profile-header-card">
+            <div class="profile-avatar-large">LM</div>
+            <div>
+              <h2 id="profile-name">Laura Meneses</h2>
+              <p id="profile-role">Administrador</p>
+              <p id="profile-email">laura@nexport.com</p>
+            </div>
+          </div>
+
+          <form id="profile-form" class="profile-form">
+            <div class="input-group profile-input-group">
+              <label for="profile-full-name">Nome completo</label>
+              <input type="text" id="profile-full-name" name="profile-full-name" required />
+            </div>
+            <div class="input-group profile-input-group">
+              <label for="profile-email-input">E-mail</label>
+              <input type="email" id="profile-email-input" name="profile-email-input" required />
+            </div>
+            <div class="input-group profile-input-group">
+              <label for="profile-phone">Telefone</label>
+              <input type="text" id="profile-phone" name="profile-phone" />
+            </div>
+            <div class="input-group profile-input-group">
+              <label for="profile-department">Departamento</label>
+              <input type="text" id="profile-department" name="profile-department" />
+            </div>
+            <div class="input-group profile-input-group">
+              <label for="profile-address">Endereço</label>
+              <input type="text" id="profile-address" name="profile-address" />
+            </div>
+            <div class="profile-actions">
+              <button type="submit" class="btn btn-primary">Salvar Alterações</button>
+            </div>
+            <p id="profile-message" class="form-message" aria-live="polite"></p>
+          </form>
+        </section>
+      </div>
+    </main>
+  </div>
+
+  <script type="module" src="src/js/config.js"></script>
+  <script type="module" src="src/js/auth.js"></script>
+  <script type="module" src="src/js/protected-route.js"></script>
+  <script type="module" src="src/js/profile-menu.js"></script>
+  <script type="module" src="src/js/profile.js"></script>
+</body>
+</html>
