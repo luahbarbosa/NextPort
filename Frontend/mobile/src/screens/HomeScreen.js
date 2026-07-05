@@ -183,7 +183,7 @@ chamar(meuAndroidId, item.androidId, nomeContato, item.residencia?.identificador
                                 local: 'Portaria Principal',
                                 tipo: 'chamando',
                                 paraAndroidId: portaria.androidId,
-                                chamadaId: novaChamada??.id
+                                chamadaId: novaChamada?.id
                             });
                         } catch (err) {
                             console.log('Erro ao iniciar chamada para portaria:', err.message);
