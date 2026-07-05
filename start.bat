@@ -1,6 +1,18 @@
 @echo off
 title InterFacil - Iniciando servicos
 
+:: ============================================================
+:: PASSO A PASSO PARA EXECUTAR:
+:: 1. Abra o terminal na raiz do projeto (InterFacil/)
+:: 2. Execute: docker compose up -d  (se PostgreSQL nao estiver rodando)
+:: 3. Execute: start.bat  (ou clique duas vezes no Explorer)
+::
+:: O script verifica PostgreSQL, instala dependencias se necessario,
+:: e abre 4 janelas cmd: auth(:3001) registro(:3002) chamada(:3003) signaling(:3004)
+::
+:: Pre-requisitos: Docker Desktop, Node.js, npm
+:: ============================================================
+
 cd /d "%~dp0"
 
 echo ========================================
