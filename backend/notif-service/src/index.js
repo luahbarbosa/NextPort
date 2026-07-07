@@ -7,7 +7,14 @@ app.use(cors())
 app.use(express.json())
 
 const notificacaoRoutes = require('./routes/notificacoes')
+const atualizacaoRoutes = require('./routes/atualizacoes')
+
 app.use('/notificacoes', notificacaoRoutes)
+app.use('/atualizacoes', atualizacaoRoutes)
+
+app.get('/health', (req, res) => {
+  res.json({ status: "ok", service: "notif-service" })
+})
 
 const PORT = process.env.PORT || 3005
 app.listen(PORT, () => {
