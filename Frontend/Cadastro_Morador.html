@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>NexPort - Cadastro de Morador</title>
+  <link rel="stylesheet" href="src/css/stylesdois.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@phosphor-icons/web@2.0.1/dist/phosphor.css" />
+  <style>
+    /* Estilos específicos do formulário de cadastro de morador,
+       coerentes com o padrão visual do stylesdois.css */
+    .form-card{
+      max-width: 500px;
+      margin: 0 auto;
+      background:#fff;
+      padding:30px;
+      border-radius:12px;
+      box-shadow:0 5px 15px rgba(0,0,0,.08);
+    }
+
+    #formMorador{
+      display:flex;
+      flex-direction:column;
+      gap:18px;
+    }
+
+    .campo{
+      display:flex;
+      flex-direction:column;
+    }
+
+    .campo label{
+      margin-bottom:6px;
+      font-weight:600;
+      color:#374151;
+    }
+
+    .campo input{
+      padding:12px;
+      border:1px solid #d1d5db;
+      border-radius:8px;
+      font-size:15px;
+      font-family: inherit;
+    }
+
+    .campo input:focus{
+      outline:none;
+      border-color:#2563eb;
+    }
+
+    .localizacao{
+      display:flex;
+      gap:15px;
+    }
+
+    .localizacao .campo{
+      flex:1;
+    }
+
+    #formMorador button{
+      margin-top:10px;
+      padding:14px;
+      border:none;
+      border-radius:8px;
+      background:#2563eb;
+      color:#fff;
+      font-size:16px;
+      font-weight:bold;
+      cursor:pointer;
+      transition:.3s;
+    }
+
+    #formMorador button:hover{
+      background:#1d4ed8;
+    }
+  </style>
+</head>
+<body>
+  <div class="dashboard-container">
+    <aside class="sidebar">
+      <div class="sidebar-logo">
+        <img src="src/images/nexport-logo.svg" alt="NexPort" class="sidebar-brand-image" />
+      </div>
+      <nav class="sidebar-menu">
+        <ul class="menu-list">
+          <li class="menu-item"><a href="index.html" class="menu-link"><i class="ph ph-gauge"></i><span>Gerenciamento Central</span></a></li>
+          <li class="menu-item"><a href="dispositivos.html" class="menu-link"><i class="ph ph-device-tablet"></i><span>Dispositivos</span></a></li>
+          <li class="menu-item active"><a href="cadastro_morador.html" class="menu-link"><i class="ph ph-user-plus"></i><span>Cadastro de Moradores</span></a></li>
+          <li class="menu-item"><a href="funcionario.html" class="menu-link"><i class="ph ph-user"></i><span>Cadastro de Funcionários</span></a></li>
+        </ul>
+      </nav>
+    </aside>
+
+    <main class="main-content">
+      <header class="page-header">
+        <div class="header-left">
+          <h1 class="page-title">Cadastro de Morador</h1>
+          <p class="page-subtitle">Cadastre novos moradores no sistema.</p>
+        </div>
+        <div class="header-right">
+          <details class="profile-menu">
+            <summary class="profile-trigger">
+              <span class="profile-avatar">LM</span>
+              <span class="profile-text">
+                <strong>Laura Meneses</strong>
+                <small>Administrador</small>
+              </span>
+              <i class="ph ph-caret-down"></i>
+            </summary>
+            <div class="profile-dropdown">
+              <a href="perfil.html" class="profile-action"><i class="ph ph-user-circle"></i><span>Meu Perfil</span></a>
+              <a href="senha.html" class="profile-action"><i class="ph ph-lock-key"></i><span>Alterar Senha</span></a>
+              <a href="#" id="logout-link" class="profile-action profile-action-logout"><i class="ph ph-sign-out"></i><span>Sair</span></a>
+            </div>
+          </details>
+        </div>
+      </header>
+
+      <section class="devices-content">
+        <div class="panel-card form-card">
+          <form id="formMorador">
+
+            <div class="campo">
+              <label for="nome">Nome Completo</label>
+              <input
+                  type="text"
+                  id="nome"
+                  placeholder="Digite o nome completo"
+                  required
+              >
+            </div>
+
+            <div class="campo">
+              <label for="cpf">CPF</label>
+              <input
+                  type="text"
+                  id="cpf"
+                  placeholder="000.000.000-00"
+                  required
+              >
+            </div>
+
+            <div class="campo">
+              <label for="email">E-mail</label>
+              <input
+                  type="email"
+                  id="email"
+                  placeholder="email@exemplo.com"
+                  required
+              >
+            </div>
+
+            <div class="campo">
+              <label for="senha">Senha</label>
+              <input
+                  type="password"
+                  id="senha"
+                  placeholder="Digite sua senha"
+                  required
+              >
+            </div>
+
+            <div class="localizacao">
+
+              <div class="campo">
+                <label for="andar">Andar</label>
+                <input
+                    type="number"
+                    id="andar"
+                    placeholder="Ex: 3"
+                    required
+                >
+              </div>
+
+              <div class="campo">
+                <label for="apartamento">Apartamento</label>
+                <input
+                    type="text"
+                    id="apartamento"
+                    placeholder="Ex: 302"
+                    required
+                >
+              </div>
+
+            </div>
+
+            <button type="submit">
+              Cadastrar Morador
+            </button>
+
+          </form>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script type="module" src="src/js/config.js"></script>
+  <script type="module" src="src/js/auth.js"></script>
+  <script type="module" src="src/js/protected-route.js"></script>
+  <script type="module" src="src/js/profile-menu.js"></script>
+  <script src="src/js/Morador.js"></script>
+
+</body>
+</html>
