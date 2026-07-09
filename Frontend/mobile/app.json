@@ -14,7 +14,8 @@
         "foregroundImage": "./assets/logo.png",
         "backgroundColor": "#E6F4FE"
       },
-      "package": "br.com.nextport.mobile"
+      "package": "br.com.nextport.mobile",
+      "permissions": ["RECORD_AUDIO"]
     },
     "plugins": [
       "expo-font"

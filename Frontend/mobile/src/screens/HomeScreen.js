@@ -7,6 +7,7 @@ import { useFonts, Poppins_400Regular, Poppins_600SemiBold, Poppins_700Bold } fr
 import api, { chamadaApi } from '../services/api';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { conectarSocket, chamar, desconectarSocket } from '../services/socketService';
+import MediaManager from "../services/webrtc/MediaManager";
 
 export default function HomeScreen({ navigation }) {
     const [dispositivos, setDispositivos] = useState([]);
@@ -200,6 +201,18 @@ chamar(meuAndroidId, item.androidId, nomeContato, item.residencia?.identificador
                 </TouchableOpacity>
             )}
 
+            {/* Botão temporário para testar microfone */}
+            <TouchableOpacity style={styles.botaoTeste} onPress={async () => {
+              try {
+                await MediaManager.startLocalAudio();
+                console.log("Microfone iniciado com sucesso!");
+              } catch (err) {
+                console.error("Erro ao abrir microfone:", err);
+              }
+            }}>
+              <Text style={styles.botaoTesteTexto}>Testar Microfone</Text>
+            </TouchableOpacity>
+
             {/* Contatos */}
             <Text style={styles.secaoTitulo}>Contatos</Text>
 
@@ -267,6 +280,20 @@ const styles = StyleSheet.create({
     },
     portariaNome: { fontFamily: 'Poppins_600SemiBold', fontSize: 16, color: '#2E7D32' },
     portariaStatus: { fontFamily: 'Poppins_400Regular', fontSize: 12, color: '#4CAF50' },
+
+    botaoTeste: {
+        backgroundColor: '#3949AB',
+        marginHorizontal: 12,
+        marginBottom: 12,
+        padding: 14,
+        borderRadius: 12,
+        alignItems: 'center',
+    },
+    botaoTesteTexto: {
+        fontFamily: 'Poppins_600SemiBold',
+        color: '#fff',
+        fontSize: 15,
+    },
 
     secaoTitulo: {
         fontFamily: 'Poppins_700Bold',
