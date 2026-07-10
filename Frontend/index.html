@@ -17,6 +17,8 @@
         <ul class="menu-list">
           <li class="menu-item active"><a href="index.html" class="menu-link"><i class="ph ph-gauge"></i><span>Gerenciamento Central</span></a></li>
           <li class="menu-item"><a href="dispositivos.html" class="menu-link"><i class="ph ph-device-tablet"></i><span>Dispositivos</span></a></li>
+          <li class="menu-item"><a href="Cadastro_Morador.html" class="menu-link"><i class="ph ph-user"></i><span>Cadastro de Moradores</span></a></li>
+          <li class="menu-item"><a href="Funcionario.html" class="menu-link"><i class="ph ph-user"></i><span>Cadastro de Funcionários</span></a></li>
         </ul>
       </nav>
     </aside>
@@ -254,57 +256,12 @@
                 <option value="offline">Offline</option>
                 <option value="unstable">Instável</option>
               </select>
-
-              <!-- Primary Button -->
-              <button class="btn btn-primary" id="btn-register-device" type="button">
-                <i class="ph ph-plus"></i>
-                Cadastrar novo dispositivo
-              </button>
             </div>
           </div>
         </section>
       </div>
     </main>
   </div>
-
-  <!-- Modal para Cadastro de Novo Dispositivo -->
-  <div class="modal modal-hidden" id="register-modal">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h2>Cadastrar Novo Dispositivo</h2>
-        <button class="modal-close" id="close-modal" type="button">
-          <i class="ph ph-x"></i>
-        </button>
-      </div>
-      <div class="modal-body">
-        <form id="form-register-device">
-          <div class="form-group">
-            <label for="device-name">Nome do Dispositivo</label>
-            <input type="text" id="device-name" name="device-name" required />
-          </div>
-          <div class="form-group">
-            <label for="device-type">Tipo</label>
-            <select id="device-type" name="device-type" required>
-              <option value="">Selecione...</option>
-              <option value="portaria">Portaria</option>
-              <option value="residencia">Residência</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label for="device-location">Residência</label>
-            <select id="device-location" name="device-location" required>
-              <option value="">Selecione a residência</option>
-            </select>
-          </div>
-        </form>
-      </div>
-      <div class="modal-footer">
-        <button class="btn btn-secondary" id="cancel-modal" type="button">Cancelar</button>
-        <button class="btn btn-primary" id="submit-modal" type="button">Cadastrar</button>
-      </div>
-    </div>
-  </div>
-
   <script type="module" src="src/js/config.js"></script>
   <script type="module" src="src/js/auth.js"></script>
   <script type="module" src="src/js/protected-route.js"></script>
