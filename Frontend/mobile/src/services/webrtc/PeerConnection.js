@@ -1,4 +1,4 @@
-import { RTCPeerConnection } from "react-native-webrtc";
+import { RTCPeerConnection, RTCSessionDescription } from "react-native-webrtc";
 
 const ICE_SERVERS = {
   iceServers: [
@@ -10,6 +10,17 @@ const ICE_SERVERS = {
 class PeerConnectionManager {
   constructor() {
     this.peer = null;
+    this.onIceCandidateCallback = null;
+    this.onTrackCallback = null;
+    this.pendingCandidates = [];
+  }
+
+  setOnIceCandidateCallback(callback) {
+    this.onIceCandidateCallback = callback;
+  }
+
+  setOnTrackCallback(callback) {
+    this.onTrackCallback = callback;
   }
 
   createPeer() {
@@ -20,6 +31,9 @@ class PeerConnectionManager {
     this.peer.onicecandidate = (event) => {
       if (!this.peer) return;
       console.log("[PeerConnection] onicecandidate:", event.candidate);
+      if (this.onIceCandidateCallback && event.candidate) {
+        this.onIceCandidateCallback(event.candidate);
+      }
     };
 
     this.peer.onconnectionstatechange = () => {
@@ -40,6 +54,9 @@ class PeerConnectionManager {
     this.peer.ontrack = (event) => {
       if (!this.peer) return;
       console.log("[PeerConnection] ontrack - stream recebida:", event.streams[0]);
+      if (this.onTrackCallback && event.streams[0]) {
+        this.onTrackCallback(event.streams[0]);
+      }
     };
 
     this.peer.onnegotiationneeded = () => {
@@ -86,6 +103,54 @@ class PeerConnectionManager {
 
   getLocalDescription() {
     return this.peer?.localDescription || null;
+  }
+
+  async setRemoteDescription(description) {
+    if (!this.peer) {
+      console.warn("[PeerConnection] Nenhuma conexão ativa para setRemoteDescription.");
+      return;
+    }
+
+    await this.peer.setRemoteDescription(new RTCSessionDescription(description));
+    console.log("[PeerConnection] RemoteDescription setada.");
+    await this._flushPendingCandidates();
+  }
+
+  async createAnswer() {
+    if (!this.peer) {
+      console.warn("[PeerConnection] Nenhuma conexão ativa para criar answer.");
+      return;
+    }
+
+    const answer = await this.peer.createAnswer();
+    await this.peer.setLocalDescription(answer);
+
+    console.log("[PeerConnection] Answer criada.");
+    console.log("Tipo:", this.peer.localDescription.type);
+  }
+
+  async addIceCandidate(candidate) {
+    if (!this.peer) {
+      console.warn("[PeerConnection] Nenhuma conexão ativa para addIceCandidate.");
+      return;
+    }
+
+    if (!this.peer.remoteDescription) {
+      console.log("[PeerConnection] RemoteDescription ausente, enfileirando candidate...");
+      this.pendingCandidates.push(candidate);
+      return;
+    }
+
+    await this.peer.addIceCandidate(candidate);
+    console.log("[PeerConnection] ICE candidate adicionado.");
+  }
+
+  async _flushPendingCandidates() {
+    while (this.pendingCandidates.length > 0) {
+      const candidate = this.pendingCandidates.shift();
+      await this.peer.addIceCandidate(candidate);
+      console.log("[PeerConnection] ICE candidate pendente adicionado.");
+    }
   }
 
   getPeer() {

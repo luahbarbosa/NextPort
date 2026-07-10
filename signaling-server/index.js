@@ -78,16 +78,63 @@ io.on('connection', (socket) => {
     }
   })
 
+  // WebRTC - Encaminhar Offer
+  socket.on('webrtc:offer', ({ from, to, offer }) => {
+    const socketDestino = dispositivosConectados[to]
+
+    console.log(`[Signaling] Offer recebida de ${from} para ${to}`)
+
+    if (socketDestino) {
+      console.log('[Signaling] Encaminhando Offer')
+      io.to(socketDestino).emit('webrtc:offer', { from, to, offer })
+    } else {
+      console.log('[Signaling] Destino offline')
+      socket.emit('webrtc:error', { message: 'Destino offline' })
+    }
+  })
+
+  // WebRTC - Encaminhar Answer
+  socket.on('webrtc:answer', ({ from, to, answer }) => {
+    const socketDestino = dispositivosConectados[to]
+
+    console.log(`[Signaling] Answer recebida de ${from} para ${to}`)
+
+    if (socketDestino) {
+      console.log('[Signaling] Encaminhando Answer')
+      io.to(socketDestino).emit('webrtc:answer', { from, to, answer })
+    } else {
+      console.log('[Signaling] Destino offline')
+      socket.emit('webrtc:error', { message: 'Destino offline' })
+    }
+  })
+
+  // WebRTC - Encaminhar ICE Candidate
+  socket.on('webrtc:ice-candidate', ({ from, to, candidate }) => {
+    const socketDestino = dispositivosConectados[to]
+
+    if (socketDestino) {
+      io.to(socketDestino).emit('webrtc:ice-candidate', { from, to, candidate })
+    } else {
+      socket.emit('webrtc:error', { message: 'Destino offline' })
+    }
+  })
+
   // Desconexão
-  socket.on('disconnect', () => {
+  socket.on('disconnect', (reason) => {
     const androidId = Object.keys(dispositivosConectados).find(
       id => dispositivosConectados[id] === socket.id
     )
     if (androidId) {
       delete dispositivosConectados[androidId]
-      console.log(`Dispositivo desconectado: ${androidId}`)
+      console.log(`[Server] Dispositivo desconectado: ${androidId}, motivo: ${reason}`)
       io.emit('status_atualizado', { androidId, online: false })
+    } else {
+      console.log(`[Server] Socket desconectado sem registro: ${socket.id}, motivo: ${reason}`)
     }
+  })
+
+  socket.on('error', (err) => {
+    console.log(`[Server] Socket error: ${socket.id}`, err.message)
   })
 })
 

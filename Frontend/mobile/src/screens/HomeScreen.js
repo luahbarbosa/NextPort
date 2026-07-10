@@ -6,7 +6,7 @@ import {
 import { useFonts, Poppins_400Regular, Poppins_600SemiBold, Poppins_700Bold } from '@expo-google-fonts/poppins';
 import api, { chamadaApi } from '../services/api';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { conectarSocket, chamar, desconectarSocket } from '../services/socketService';
+import { conectarSocket, chamar, desconectarSocket, getSocket } from '../services/socketService';
 
 export default function HomeScreen({ navigation }) {
     const [dispositivos, setDispositivos] = useState([]);
@@ -23,40 +23,55 @@ export default function HomeScreen({ navigation }) {
     });
 
     useEffect(() => {
-        carregarDados();
+        let cancelado = false;
+
+        const iniciar = async () => {
+            if (cancelado) return;
+
+            const androidId = await AsyncStorage.getItem('androidId');
+            const nome = await AsyncStorage.getItem('nomeUsuario');
+            const local = await AsyncStorage.getItem('localDispositivo');
+
+            if (cancelado) return;
+
+            setMeuAndroidId(androidId);
+            setMeuNome(nome || 'Usuário');
+
+            await carregarDispositivos();
+
+            if (androidId && !cancelado) {
+                conectarSocket(
+                    androidId,
+                    (chamadaData) => {
+                        navigation.navigate('Chamada', {
+                            nome: chamadaData.nome,
+                            local: chamadaData.local,
+                            tipo: 'recebendo',
+                            deAndroidId: chamadaData.deAndroidId,
+                            chamadaId: chamadaData.chamadaId,
+                        });
+                    },
+                    (statusData) => {
+                        setDispositivosOnline(prev => ({
+                            ...prev,
+                            [statusData.androidId]: statusData.online
+                        }));
+                    }
+                );
+            }
+        };
+
+        iniciar();
+
+        return () => {
+            cancelado = true;
+            const socket = getSocket();
+            if (socket) {
+                socket.off('chamada_recebida');
+                socket.off('status_atualizado');
+            }
+        };
     }, []);
-
-    const carregarDados = async () => {
-    const androidId = await AsyncStorage.getItem('androidId');
-    const nome = await AsyncStorage.getItem('nomeUsuario'); // ← mudou aqui
-    const local = await AsyncStorage.getItem('localDispositivo');
-
-    setMeuAndroidId(androidId);
-    setMeuNome(nome || 'Usuário');
-
-    await carregarDispositivos();
-
-    if (androidId) {
-        conectarSocket(
-        androidId,
-        (chamadaData) => {
-            navigation.navigate('Chamada', {
-            nome: chamadaData.nome,
-            local: chamadaData.local,
-            tipo: 'recebendo',
-            deAndroidId: chamadaData.deAndroidId,
-            chamadaId: chamadaData.chamadaId,
-            });
-        },
-        (statusData) => {
-            setDispositivosOnline(prev => ({
-                ...prev,
-                [statusData.androidId]: statusData.online
-            }));
-        }
-        );
-    }
-    };
 
     const carregarDispositivos = async () => {
         try {

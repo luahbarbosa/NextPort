@@ -5,22 +5,40 @@ const SOCKET_URL = process.env.EXPO_PUBLIC_SOCKET_URL || 'http://localhost:3004'
 let socket = null;
 
 export const conectarSocket = (androidId, onChamadaRecebida, onStatusAtualizado) => {
+  console.log('[Socket] conectarSocket chamado');
+
+  if (socket?.connected) {
+    console.log('[Socket] Já conectado:', socket.id);
+    socket.off('chamada_recebida');
+    socket.off('status_atualizado');
+    socket.on('chamada_recebida', (data) => {
+      console.log('[Socket] Chamada recebida de:', data.deAndroidId);
+      if (onChamadaRecebida) onChamadaRecebida(data);
+    });
+    socket.on('status_atualizado', (data) => {
+      if (onStatusAtualizado) onStatusAtualizado(data);
+    });
+    return socket;
+  }
+
+  console.log('[Socket] Criando nova conexão');
+
   socket = io(SOCKET_URL, {
     transports: ['websocket'],
     reconnection: true,
   });
 
   socket.on('connect', () => {
-    console.log('Socket conectado:', socket.id);
+    console.log('[Socket] connect:', socket.id);
     socket.emit('registrar', androidId);
   });
 
   socket.on('registrado', (data) => {
-    console.log('Registrado como:', data.androidId);
+    console.log('[Socket] Registrado como:', data.androidId);
   });
 
   socket.on('chamada_recebida', (data) => {
-    console.log('Chamada recebida de:', data.deAndroidId);
+    console.log('[Socket] Chamada recebida de:', data.deAndroidId);
     if (onChamadaRecebida) onChamadaRecebida(data);
   });
 
@@ -28,20 +46,32 @@ export const conectarSocket = (androidId, onChamadaRecebida, onStatusAtualizado)
     if (onStatusAtualizado) onStatusAtualizado(data);
   });
 
-  socket.on('chamada_aceita', () => {
-    console.log('Chamada aceita pelo destinatário');
+  socket.on('disconnect', (reason) => {
+    console.log('[Socket] disconnect:', reason);
   });
 
-  socket.on('chamada_recusada', () => {
-    console.log('Chamada recusada');
+  socket.on('connect_error', (err) => {
+    console.log('[Socket] Connect Error:', err.message);
   });
 
-  socket.on('chamada_encerrada', () => {
-    console.log('Chamada encerrada');
+  socket.on('error', (err) => {
+    console.log('[Socket] Error:', err);
   });
 
-  socket.on('dispositivo_offline', (data) => {
-    console.log('Dispositivo offline:', data.paraAndroidId);
+  socket.io.on('reconnect', () => {
+    console.log('[Socket] reconnect');
+  });
+
+  socket.io.on('reconnect_attempt', () => {
+    console.log('[Socket] reconnect_attempt');
+  });
+
+  socket.io.on('reconnect_error', (err) => {
+    console.log('[Socket] reconnect_error:', err.message);
+  });
+
+  socket.io.on('reconnect_failed', () => {
+    console.log('[Socket] reconnect_failed');
   });
 
   return socket;
