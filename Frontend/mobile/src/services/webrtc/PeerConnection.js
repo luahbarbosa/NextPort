@@ -68,6 +68,26 @@ class PeerConnectionManager {
     console.log(`[PeerConnection] ${tracks.length} track(s) adicionada(s).`);
   }
 
+  async createOffer() {
+    if (!this.peer) {
+      console.warn("[PeerConnection] Nenhuma conexão ativa para criar offer.");
+      return;
+    }
+
+    const offer = await this.peer.createOffer({
+      offerToReceiveAudio: true,
+    });
+    await this.peer.setLocalDescription(offer);
+
+    console.log("[PeerConnection] Offer criada.");
+    console.log("Tipo:", this.peer.localDescription.type);
+    console.log(this.peer.localDescription.sdp.substring(0, 300));
+  }
+
+  getLocalDescription() {
+    return this.peer?.localDescription || null;
+  }
+
   getPeer() {
     return this.peer;
   }
