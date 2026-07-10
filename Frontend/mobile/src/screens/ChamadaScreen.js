@@ -1,32 +1,40 @@
-import { useState, useEffect } from 'react';
-import {
-  View, Text, TouchableOpacity, StyleSheet, Image, SafeAreaView
-} from 'react-native';
+import { useState, useEffect, useCallback } from 'react';
+import { StyleSheet, View, Text, TouchableOpacity } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { RTCView } from 'react-native-webrtc';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
-import { useFonts, Poppins_400Regular, Poppins_700Bold } from '@expo-google-fonts/poppins';
+import { useFonts, Poppins_400Regular, Poppins_600SemiBold, Poppins_700Bold } from '@expo-google-fonts/poppins';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { aceitarChamada, recusarChamada, encerrarChamada, getSocket } from '../services/socketService';
 import { chamadaApi } from '../services/api';
 import MediaManager from '../services/webrtc/MediaManager';
 import PeerConnection from '../services/webrtc/PeerConnection';
 import SignalingBridge from '../services/webrtc/SignalingBridge';
+import CallAvatar from '../components/CallAvatar';
+import CallButton from '../components/CallButton';
+import CallStatus from '../components/CallStatus';
+import AudioControls, { AudioWaves } from '../components/AudioControls';
 
 export default function ChamadaScreen({ route, navigation }) {
   const params = route.params || {};
   const { nome = 'Desconhecido', local = 'Local não informado', tipo = 'recebendo', deAndroidId, paraAndroidId, chamadaId } = params;
-  
+
   const destinoAndroidId = deAndroidId || paraAndroidId;
   const [fase, setFase] = useState(tipo);
   const [statusTexto, setStatusTexto] = useState(tipo === 'chamando' ? 'chamando...' : '');
+  const [remoteStream, setRemoteStream] = useState(null);
+  const [connectionReady, setConnectionReady] = useState(false);
+  const [isMuted, setIsMuted] = useState(false);
+  const [speakerEnabled, setSpeakerEnabled] = useState(false);
 
   const [fontsLoaded] = useFonts({
     Poppins_400Regular,
+    Poppins_600SemiBold,
     Poppins_700Bold,
   });
 
-  const [remoteStream, setRemoteStream] = useState(null);
+  const displayStatus = fase === 'conversando' && !connectionReady ? 'conectando' : fase;
 
   async function iniciarWebRTC() {
     try {
@@ -45,6 +53,7 @@ export default function ChamadaScreen({ route, navigation }) {
       PeerConnection.setOnTrackCallback((remoteStream) => {
         console.log("[Caller] Stream remota recebida");
         setRemoteStream(remoteStream);
+        setConnectionReady(true);
       });
       PeerConnection.addLocalStream(stream);
       await PeerConnection.createOffer();
@@ -83,6 +92,7 @@ export default function ChamadaScreen({ route, navigation }) {
       PeerConnection.setOnTrackCallback((remoteStream) => {
         console.log("[Receiver] Stream remota recebida");
         setRemoteStream(remoteStream);
+        setConnectionReady(true);
       });
       PeerConnection.addLocalStream(stream);
 
@@ -146,6 +156,8 @@ export default function ChamadaScreen({ route, navigation }) {
 
   const handleEncerrar = async () => {
     try {
+      setFase('encerrando');
+      setStatusTexto('encerrando...');
       if (chamadaId) {
         await chamadaApi.patch(`/chamadas/${chamadaId}`, {
           encerradoEm: new Date()
@@ -160,6 +172,21 @@ export default function ChamadaScreen({ route, navigation }) {
       navigation.goBack();
     }
   };
+
+  const handleToggleMute = useCallback(() => {
+    const stream = MediaManager.getLocalStream();
+    if (stream) {
+      const tracks = stream.getAudioTracks();
+      tracks.forEach((track) => {
+        track.enabled = isMuted;
+      });
+    }
+    setIsMuted((prev) => !prev);
+  }, [isMuted]);
+
+  const handleToggleSpeaker = useCallback(() => {
+    setSpeakerEnabled((prev) => !prev);
+  }, []);
 
   useEffect(() => {
     const socket = getSocket();
@@ -215,128 +242,145 @@ export default function ChamadaScreen({ route, navigation }) {
 
   return (
     <LinearGradient
-      colors={['#2D2D8A', '#1B8A6B', '#E8B800', '#EFE8D5']}
+      colors={['#0F0F1A', '#1A1A2E', '#16213E']}
       style={styles.container}
     >
-      <SafeAreaView style={styles.safeArea}>
-
-        <TouchableOpacity style={styles.voltarBtn} onPress={() => {
-          if (fase === 'chamando' || fase === 'conversando') {
-            handleEncerrar();
-          } else {
-            navigation.goBack();
-          }
-        }}>
-          <Ionicons name="arrow-back" size={26} color="#fff" />
-        </TouchableOpacity>
-
+      <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
         {remoteStream && (
           <RTCView streamURL={remoteStream.toURL()} style={styles.remoteAudio} />
         )}
 
-        <View style={styles.topo}>
-          {(fase === 'chamando' || fase === 'conversando') && (
-            <Text style={styles.statusTexto}>{statusTexto}</Text>
-          )}
+        {/* Top bar */}
+        <View style={styles.topBar}>
+          <TouchableOpacity
+            style={styles.backBtn}
+            onPress={() => {
+              if (fase === 'chamando' || fase === 'conversando' || fase === 'encerrando') {
+                handleEncerrar();
+              } else {
+                navigation.goBack();
+              }
+            }}
+          >
+            <Ionicons name="chevron-down" size={28} color="rgba(255,255,255,0.7)" />
+          </TouchableOpacity>
         </View>
 
-        <View style={styles.centro}>
-          <View style={styles.avatarCircle}>
-            <Image
-              source={require('../../assets/avatar.png')}
-              style={styles.avatarImg}
-            />
+        {/* Center: Avatar + Info */}
+        <View style={styles.center}>
+          <CallAvatar fase={displayStatus} imageSource={require('../../assets/avatar.png')} />
+          <AudioWaves active={displayStatus === 'conversando' && connectionReady} />
+          <View style={styles.contactInfo}>
+            <View style={styles.infoRow}>
+              <Ionicons name="person-outline" size={16} color="rgba(255,255,255,0.5)" />
+              <Text style={styles.nome}>{nome}</Text>
+            </View>
+            <View style={styles.infoRow}>
+              <Ionicons name="location-outline" size={16} color="rgba(255,255,255,0.5)" />
+              <Text style={styles.local}>{local}</Text>
+            </View>
           </View>
-          <Text style={styles.nome}>{nome}</Text>
-          <Text style={styles.local}>{local}</Text>
+          <CallStatus status={displayStatus} fontsLoaded={fontsLoaded} />
         </View>
 
-        <View style={styles.botoes}>
-          {fase === 'recebendo' && (
-            <>
-              <TouchableOpacity style={[styles.botaoCircular, styles.botaoVerde]} onPress={handleAceitar}>
-                <Ionicons name="call" size={30} color="#fff" />
-              </TouchableOpacity>
-              <TouchableOpacity style={[styles.botaoCircular, styles.botaoVermelho]} onPress={handleRecusar}>
-                <Ionicons name="call" size={30} color="#fff" style={{ transform: [{ rotate: '135deg' }] }} />
-              </TouchableOpacity>
-            </>
+        {/* Bottom: Controls */}
+        <View style={styles.bottom}>
+          {displayStatus === 'conversando' && connectionReady && (
+            <AudioControls
+              isMuted={isMuted}
+              onToggleMute={handleToggleMute}
+              speakerEnabled={speakerEnabled}
+              onToggleSpeaker={handleToggleSpeaker}
+            />
           )}
 
-          {(fase === 'chamando' || fase === 'conversando') && (
-            <TouchableOpacity style={[styles.botaoCircular, styles.botaoVermelho]} onPress={handleEncerrar}>
-              <Ionicons name="call" size={30} color="#fff" style={{ transform: [{ rotate: '135deg' }] }} />
-            </TouchableOpacity>
-          )}
+          <View style={styles.mainButtons}>
+            {fase === 'recebendo' && (
+              <>
+                <CallButton icon="close" color="#DC2626" onPress={handleRecusar} />
+                <CallButton icon="call" color="#22C55E" onPress={handleAceitar} />
+              </>
+            )}
+
+            {(fase === 'chamando' || fase === 'conversando') && (
+              <CallButton icon="call" color="#DC2626" onPress={handleEncerrar} style={{ transform: [{ rotate: '135deg' }] }} />
+            )}
+          </View>
         </View>
-
       </SafeAreaView>
+      <Text style={styles.versionLabel}>InterFacil</Text>
     </LinearGradient>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1 },
-  safeArea: { flex: 1, justifyContent: 'space-between' },
-  voltarBtn: {
-    paddingHorizontal: 20,
-    paddingTop: 10,
+  container: {
+    flex: 1,
   },
-  topo: {
-    alignItems: 'center',
-    marginTop: 40,
+  safeArea: {
+    flex: 1,
+    justifyContent: 'space-between',
   },
-  statusTexto: {
-    fontFamily: 'Poppins_400Regular',
-    fontSize: 18,
-    color: '#E5E5F5',
-  },
-  centro: {
-    alignItems: 'center',
-  },
-  avatarCircle: {
-    width: 180,
-    height: 180,
-    borderRadius: 90,
-    backgroundColor: '#fff',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 24,
-  },
-  avatarImg: {
-    width: 100,
-    height: 100,
-  },
-  nome: {
-    fontFamily: 'Poppins_700Bold',
-    fontSize: 26,
-    color: '#fff',
-    marginBottom: 4,
-  },
-  local: {
-    fontFamily: 'Poppins_400Regular',
-    fontSize: 16,
-    color: '#F0F0E0',
-  },
-  botoes: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    gap: 80,
-    paddingBottom: 60,
-  },
-  botaoCircular: {
-    width: 70,
-    height: 70,
-    borderRadius: 35,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  botaoVerde: { backgroundColor: '#1B8A6B' },
-  botaoVermelho: { backgroundColor: '#D32F2F' },
   remoteAudio: {
     position: 'absolute',
     width: 1,
     height: 1,
     opacity: 0,
+  },
+  topBar: {
+    paddingHorizontal: 20,
+    paddingTop: 10,
+  },
+  backBtn: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(255,255,255,0.08)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    alignSelf: 'flex-start',
+  },
+  center: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 20,
+  },
+  contactInfo: {
+    alignItems: 'center',
+    marginTop: 16,
+    gap: 6,
+  },
+  infoRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  nome: {
+    fontFamily: 'Poppins_700Bold',
+    fontSize: 26,
+    color: '#fff',
+  },
+  local: {
+    fontFamily: 'Poppins_400Regular',
+    fontSize: 15,
+    color: 'rgba(255,255,255,0.6)',
+  },
+  bottom: {
+    alignItems: 'center',
+    paddingBottom: 40,
+  },
+  mainButtons: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    gap: 50,
+  },
+  versionLabel: {
+    position: 'absolute',
+    bottom: 8,
+    alignSelf: 'center',
+    fontFamily: 'Poppins_400Regular',
+    fontSize: 11,
+    color: 'rgba(255,255,255,0.2)',
   },
 });

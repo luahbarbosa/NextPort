@@ -121,7 +121,7 @@ export default function HomeScreen({ navigation }) {
                     }).catch(() => ({ data: { id: null } }));
                     const novaChamada = resChamada.data;
 
-chamar(meuAndroidId, item.androidId, nomeContato, item.residencia?.identificador || 'Portaria', novaChamada?.id);
+chamar(meuAndroidId, item.androidId, meuNome, item.residencia?.identificador || 'Portaria', novaChamada?.id);
 
                     navigation.navigate('Chamada', {
                         nome: nomeContato,
@@ -191,7 +191,7 @@ chamar(meuAndroidId, item.androidId, nomeContato, item.residencia?.identificador
                             }).catch(() => ({ data: { id: null } }));
                             const novaChamada = resChamada.data;
 
-                            chamar(meuAndroidId, portaria.androidId, 'Portaria', 'Portaria Principal', novaChamada?.id);
+                            chamar(meuAndroidId, portaria.androidId, meuNome, 'Portaria Principal', novaChamada?.id);
 
                             navigation.navigate('Chamada', {
                                 nome: 'Portaria',
