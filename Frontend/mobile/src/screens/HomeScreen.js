@@ -7,7 +7,7 @@ import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 import { useFonts, Poppins_400Regular, Poppins_600SemiBold, Poppins_700Bold } from '@expo-google-fonts/poppins';
 import api, { chamadaApi } from '../services/api';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { conectarSocket, chamar, desconectarSocket, getSocket } from '../services/socketService';
+import { conectarSocket, chamar, getSocket } from '../services/socketService';
 
 export default function HomeScreen({ navigation }) {
     const insets = useSafeAreaInsets();
@@ -86,7 +86,7 @@ export default function HomeScreen({ navigation }) {
             setPortaria(port);
             setDispositivos(residencias);
         } catch (e) {
-            console.log('Erro ao carregar dispositivos:', e.message);
+            console.error('Erro ao carregar dispositivos:', e.message);
         }
 
         try {
@@ -97,7 +97,7 @@ export default function HomeScreen({ navigation }) {
             lista.forEach(id => { initialStatus[id] = true; });
             setDispositivosOnline(prev => ({ ...prev, ...initialStatus }));
         } catch (e) {
-            console.log('Erro ao buscar status online:', e.message);
+            console.error('Erro ao buscar status online:', e.message);
         }
     };
 
@@ -135,7 +135,7 @@ export default function HomeScreen({ navigation }) {
                         chamadaId: novaChamada.id
                     });
                 } catch (err) {
-                    console.log('Erro ao iniciar chamada:', err.message);
+                    console.error('Erro ao iniciar chamada:', err.message);
                 }
             }}
             disabled={!isOnline(item.androidId)}
@@ -205,7 +205,7 @@ export default function HomeScreen({ navigation }) {
                                 chamadaId: novaChamada?.id
                             });
                         } catch (err) {
-                            console.log('Erro ao iniciar chamada para portaria:', err.message);
+                            console.error('Erro ao iniciar chamada para portaria:', err.message);
                         }
                     }}
                 >

@@ -46,7 +46,7 @@ export default function HistoricoScreen() {
       setChamadas(response.data);
       setErro('');
     } catch (e) {
-      console.log('Erro ao carregar histórico:', e.message);
+      console.error('Erro ao carregar histórico:', e.message);
       setErro('Erro ao carregar histórico. Verifique sua conexão.');
     }
   };

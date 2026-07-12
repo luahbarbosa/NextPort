@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import {
   View, Text, TextInput, TouchableOpacity,
-  StyleSheet, ActivityIndicator, Alert, SafeAreaView
+  StyleSheet, ActivityIndicator, Alert
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useFonts, Poppins_400Regular, Poppins_600SemiBold, Poppins_700Bold } from '@expo-google-fonts/poppins';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -45,7 +46,7 @@ const handleLogin = async () => {
 
     navigation.replace('MainTabs');
   } catch (e) {
-    console.log(e?.message || 'Erro de login');
+    console.error(e?.message || 'Erro de login');
     Alert.alert('Erro', 'Não foi possível entrar. Verifique as credenciais ou a conexão com o backend.');
   } finally {
     setLoading(false);
