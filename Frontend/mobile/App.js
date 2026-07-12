@@ -62,21 +62,7 @@ function MainTabs() {
           )
         }}
       />
-      <Tab.Screen
-        name="Settings"
-        component={HomeScreen}
-        options={{
-          tabBarIcon: ({ focused }) => (
-            <Image
-              source={require('./assets/settings.png')}
-              style={{
-                width: 26, height: 26,
-                tintColor: focused ? '#343399' : '#968c8cff'
-              }}
-            />
-          )
-        }}
-      />
+
     </Tab.Navigator>
   );
 }

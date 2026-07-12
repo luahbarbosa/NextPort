@@ -1,14 +1,16 @@
 import { useEffect, useState } from 'react';
 import {
     View, Text, StyleSheet, FlatList,
-    TextInput, TouchableOpacity, SafeAreaView, Image
+    TextInput, TouchableOpacity, Image
 } from 'react-native';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useFonts, Poppins_400Regular, Poppins_600SemiBold, Poppins_700Bold } from '@expo-google-fonts/poppins';
 import api, { chamadaApi } from '../services/api';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { conectarSocket, chamar, desconectarSocket, getSocket } from '../services/socketService';
 
 export default function HomeScreen({ navigation }) {
+    const insets = useSafeAreaInsets();
     const [dispositivos, setDispositivos] = useState([]);
     const [busca, setBusca] = useState('');
     const [portaria, setPortaria] = useState(null);
@@ -164,8 +166,8 @@ chamar(meuAndroidId, item.androidId, meuNome, item.residencia?.identificador || 
     return (
         <SafeAreaView style={styles.container}>
 
-            {/* Header com logo */}
-            <View style={styles.header}>
+            {/* Header com logo e configurações */}
+            <View style={[styles.header, { paddingTop: 12}]}>
                 <Image source={require('../../assets/logo.png')} style={styles.logo} resizeMode="contain" />
             </View>
 
@@ -249,13 +251,17 @@ const styles = StyleSheet.create({
     container: { flex: 1, backgroundColor: '#F0F0F0' },
 
     header: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
         backgroundColor: '#fff',
         paddingHorizontal: 20,
-        paddingVertical: 14,
+        paddingBottom: 14,
         borderBottomWidth: 1,
         borderBottomColor: '#eee',
     },
     logo: { width: 120, height: 36 },
+    settingsIcone: { width: 26, height: 26, tintColor: '#343399' },
 
     boasVindas: {
         flexDirection: 'row',
