@@ -4,16 +4,38 @@ import bcrypt from 'bcryptjs';
 const prisma = new PrismaClient();
 
 async function main() {
-  const senhaHashAdmin = await bcrypt.hash('123456', 10);
+  const senhaHashAdmin = await bcrypt.hash('admin123', 10);
   const senhaHashMorador = await bcrypt.hash('senha123', 10);
+
+  // 0. Remover administrador antigo para padronização
+  const oldAdmin = await prisma.usuario.findUnique({
+    where: { email: 'admin@interfone.com' },
+  });
+
+  if (oldAdmin) {
+    await prisma.logSistema.updateMany({
+      where: { usuarioId: oldAdmin.id },
+      data: { usuarioId: null },
+    });
+
+    await prisma.residencia.updateMany({
+      where: { usuarioId: oldAdmin.id },
+      data: { usuarioId: null },
+    });
+
+    await prisma.usuario.delete({
+      where: { id: oldAdmin.id },
+    });
+    console.log('Administrador antigo (admin@interfone.com) removido com sucesso.');
+  }
 
   // 1. Criar Usuários
   const admin = await prisma.usuario.upsert({
-    where: { email: 'admin@interfone.com' },
+    where: { email: 'admin@interfacil.com' },
     update: {},
     create: {
       nome: 'Administrador',
-      email: 'admin@interfone.com',
+      email: 'admin@interfacil.com',
       senhaHash: senhaHashAdmin,
       perfil: 'admin',
     },

@@ -79,7 +79,7 @@ function renderDispositivos() {
             <td>
               <div class="device-cell">
                 <div class="device-avatar">
-                  <i class="fas fa-mobile"></i>
+                  <i class="ph ph-device-mobile"></i>
                 </div>
                 <div class="device-info">
                   <strong>${item.nome}</strong>
@@ -94,14 +94,23 @@ function renderDispositivos() {
             </td>
             <td>${item.ultimoAcesso}</td>
             <td class="actions-cell">
-              <button class="action-btn btn-restart" type="button" title="Reiniciar conexão" data-id="${item.id}">
-                <i class="fas fa-arrows-rotate"></i>
+              <button class="action-btn btn-restart" type="button"
+                title="🔄 Reiniciar conexão do dispositivo"
+                data-tooltip="Reiniciar conexão"
+                aria-label="Reiniciar conexão" data-id="${item.id}">
+                <i class="ph ph-arrow-counter-clockwise" style="font-size: 16px;"></i>
               </button>
-              <button class="action-btn btn-edit" type="button" title="Editar" data-id="${item.id}">
-                <i class="fas fa-pen"></i>
+              <button class="action-btn btn-edit" type="button"
+                title="✏️ Editar informações do dispositivo"
+                data-tooltip="Editar"
+                aria-label="Editar" data-id="${item.id}">
+                <i class="ph ph-pencil-simple" style="font-size: 16px;"></i>
               </button>
-              <button class="action-btn btn-delete" type="button" title="Remover" data-id="${item.id}">
-                <i class="fas fa-trash"></i>
+              <button class="action-btn btn-delete" type="button"
+                title="🗑️ Remover dispositivo do sistema"
+                data-tooltip="Remover"
+                aria-label="Remover" data-id="${item.id}">
+                <i class="ph ph-trash" style="font-size: 16px;"></i>
               </button>
             </td>
           </tr>
@@ -393,7 +402,7 @@ function handleFiltrosClick() {
       OFFLINE: 'Filtro: Offline',
       INATIVO: 'Filtro: Inativo'
     };
-    btnFilters.innerHTML = `<i class="fas fa-sliders"></i> ${labelMap[state.filtroStatus]}`;
+    btnFilters.innerHTML = `<i class="ph ph-sliders"></i> ${labelMap[state.filtroStatus]}`;
   }
 
   renderDispositivos();

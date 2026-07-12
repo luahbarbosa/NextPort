@@ -143,8 +143,8 @@ POST http://localhost:3001/auth/login
 Content-Type: application/json
 
 {
-  "email": "admin@interfone.com",
-  "senha": "123456"
+  "email": "admin@interfacil.com",
+  "senha": "admin123"
 }
 ```
 
