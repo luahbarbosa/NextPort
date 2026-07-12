@@ -237,7 +237,7 @@ chamar(meuAndroidId, item.androidId, meuNome, item.residencia?.identificador || 
                 keyExtractor={(item) => item.id.toString()}
                 renderItem={renderContato}
                 showsVerticalScrollIndicator={false}
-                contentContainerStyle={{ paddingBottom: 80 }}
+                contentContainerStyle={{ paddingBottom: insets.bottom + 60 }}
                 ListEmptyComponent={
                     <Text style={styles.vazio}>Nenhum contato encontrado</Text>
                 }

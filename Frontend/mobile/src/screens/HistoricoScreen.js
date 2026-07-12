@@ -1,13 +1,15 @@
 import { useEffect, useState } from 'react';
 import {
   View, Text, StyleSheet, FlatList,
-  SafeAreaView, Image
+  Image
 } from 'react-native';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useFonts, Poppins_400Regular, Poppins_600SemiBold, Poppins_700Bold } from '@expo-google-fonts/poppins';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { chamadaApi } from '../services/api';
 
 export default function HistoricoScreen() {
+  const insets = useSafeAreaInsets();
   const [chamadas, setChamadas] = useState([]);
   const [erro, setErro] = useState('');
   const [meuAndroidId, setMeuAndroidId] = useState(null);
@@ -120,7 +122,7 @@ export default function HistoricoScreen() {
         data={grupos}
         keyExtractor={(item) => item.data}
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingBottom: 100 }}
+        contentContainerStyle={{ paddingBottom: insets.bottom + 70 }}
         renderItem={({ item: grupo }) => (
           <View>
             <Text style={styles.dataLabel}>{grupo.data}</Text>
