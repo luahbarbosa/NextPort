@@ -79,12 +79,73 @@ router.post('/', async (req, res) => {
       return res.status(400).json({ erro: 'Dispositivos de origem ou destino não encontrados.' })
     }
 
+    const valStatus = status || 'nao_atendida'
+    const statusValidos = ['atendida', 'nao_atendida', 'recusada', 'erro']
+    if (!statusValidos.includes(valStatus)) {
+      return res.status(400).json({ erro: `Status inválido. Deve ser um dos seguintes: ${statusValidos.join(', ')}` })
+    }
+
     const chamada = await prisma.chamada.create({
       data: {
         dispositivoOrigemId: Number(origemId),
         dispositivoDestinoId: Number(destinoId),
         iniciadoEm: new Date(),
-        status: status || 'nao_atendida'
+        status: valStatus
+      }
+    })
+    res.status(201).json(chamada)
+  } catch (err) {
+    res.status(400).json({ erro: err.message })
+  }
+})
+
+// Obter chamada por ID
+router.get('/:id', async (req, res) => {
+  try {
+    const chamada = await prisma.chamada.findUnique({
+      where: { id: Number(req.params.id) },
+      include: {
+        origem: {
+          include: { residencia: { include: { usuario: true } } }
+        },
+        destino: {
+          include: { residencia: { include: { usuario: true } } }
+        }
+      }
+    })
+    if (!chamada) {
+      return res.status(404).json({ erro: 'Chamada não encontrada' })
+    }
+    res.json(chamada)
+  } catch (err) {
+    res.status(500).json({ erro: err.message })
+  }
+})
+
+// Atualizar status genérico da chamada
+router.patch('/:id', async (req, res) => {
+  try {
+    const { status, atendidoEm, encerradoEm } = req.body
+    const id = Number(req.params.id)
+
+    const existe = await prisma.chamada.findUnique({ where: { id } })
+    if (!existe) {
+      return res.status(404).json({ erro: 'Chamada não encontrada' })
+    }
+
+    if (status) {
+      const statusValidos = ['atendida', 'nao_atendida', 'recusada', 'erro']
+      if (!statusValidos.includes(status)) {
+        return res.status(400).json({ erro: `Status inválido. Deve ser um dos seguintes: ${statusValidos.join(', ')}` })
+      }
+    }
+
+    const chamada = await prisma.chamada.update({
+      where: { id },
+      data: { 
+        status, 
+        atendidoEm: atendidoEm ? new Date(atendidoEm) : undefined, 
+        encerradoEm: encerradoEm ? new Date(encerradoEm) : undefined 
       }
     })
     res.json(chamada)
@@ -93,13 +154,64 @@ router.post('/', async (req, res) => {
   }
 })
 
-// Atualizar status da chamada
-router.patch('/:id', async (req, res) => {
+// Atender chamada
+router.patch('/:id/atender', async (req, res) => {
   try {
-    const { status, atendidoEm, encerradoEm } = req.body
+    const id = Number(req.params.id)
+    const existe = await prisma.chamada.findUnique({ where: { id } })
+    if (!existe) {
+      return res.status(404).json({ erro: 'Chamada não encontrada' })
+    }
+
     const chamada = await prisma.chamada.update({
-      where: { id: Number(req.params.id) },
-      data: { status, atendidoEm, encerradoEm }
+      where: { id },
+      data: {
+        status: 'atendida',
+        atendidoEm: new Date()
+      }
+    })
+    res.json(chamada)
+  } catch (err) {
+    res.status(400).json({ erro: err.message })
+  }
+})
+
+// Encerrar chamada
+router.patch('/:id/encerrar', async (req, res) => {
+  try {
+    const id = Number(req.params.id)
+    const existe = await prisma.chamada.findUnique({ where: { id } })
+    if (!existe) {
+      return res.status(404).json({ erro: 'Chamada não encontrada' })
+    }
+
+    const chamada = await prisma.chamada.update({
+      where: { id },
+      data: {
+        encerradoEm: new Date()
+      }
+    })
+    res.json(chamada)
+  } catch (err) {
+    res.status(400).json({ erro: err.message })
+  }
+})
+
+// Recusar chamada
+router.patch('/:id/recusar', async (req, res) => {
+  try {
+    const id = Number(req.params.id)
+    const existe = await prisma.chamada.findUnique({ where: { id } })
+    if (!existe) {
+      return res.status(404).json({ erro: 'Chamada não encontrada' })
+    }
+
+    const chamada = await prisma.chamada.update({
+      where: { id },
+      data: {
+        status: 'recusada',
+        encerradoEm: new Date()
+      }
     })
     res.json(chamada)
   } catch (err) {

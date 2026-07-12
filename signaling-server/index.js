@@ -6,6 +6,7 @@ require('dotenv').config()
 
 const app = express()
 app.use(cors())
+app.use(express.json())
 
 const server = http.createServer(app)
 
@@ -140,6 +141,26 @@ io.on('connection', (socket) => {
 
 app.get('/status', (req, res) => {
   res.json(Object.keys(dispositivosConectados))
+})
+
+app.get('/health', (req, res) => {
+  res.json({ status: "ok", service: "signaling-server" })
+})
+
+app.post('/reiniciar', (req, res) => {
+  const { androidId } = req.body
+  if (!androidId) {
+    return res.status(400).json({ erro: 'O campo androidId é obrigatório.' })
+  }
+
+  const socketId = dispositivosConectados[androidId]
+  if (socketId) {
+    io.to(socketId).emit('reiniciar', { androidId })
+    console.log(`[Signaling] Evento 'reiniciar' enviado para ${androidId} (socket: ${socketId})`)
+    return res.json({ mensagem: `Comando de reinicialização enviado ao dispositivo ${androidId}.` })
+  }
+
+  res.status(404).json({ erro: `Dispositivo ${androidId} não está online no momento.` })
 })
 
 const PORT = process.env.PORT || 3004

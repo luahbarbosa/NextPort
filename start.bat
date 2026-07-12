@@ -61,6 +61,9 @@ start "Chamada Service" cmd /c "cd /d %~dp0backend\chamada-service && npm start"
 timeout /t 2 /nobreak >nul
 
 start "Signaling Server" cmd /c "cd /d %~dp0signaling-server && npm start"
+timeout /t 2 /nobreak >nul
+
+start "Notif Service" cmd /c "cd /d %~dp0backend\notif-service && npm start"
 
 echo.
 echo ========================================
@@ -71,6 +74,7 @@ echo  Auth:      http://localhost:3001
 echo  Registro:  http://localhost:3002
 echo  Chamada:   http://localhost:3003
 echo  Signaling: http://localhost:3004
+echo  Notif:     http://localhost:3005
 echo.
 echo  Para parar: feche as janelas abertas
 echo.

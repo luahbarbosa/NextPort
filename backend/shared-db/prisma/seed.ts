@@ -4,16 +4,16 @@ import bcrypt from 'bcryptjs';
 const prisma = new PrismaClient();
 
 async function main() {
-  const senhaHashAdmin = await bcrypt.hash('admin123', 10);
+  const senhaHashAdmin = await bcrypt.hash('123456', 10);
   const senhaHashMorador = await bcrypt.hash('senha123', 10);
 
   // 1. Criar Usuários
   const admin = await prisma.usuario.upsert({
-    where: { email: 'admin@interfacil.com' },
+    where: { email: 'admin@interfone.com' },
     update: {},
     create: {
       nome: 'Administrador',
-      email: 'admin@interfacil.com',
+      email: 'admin@interfone.com',
       senhaHash: senhaHashAdmin,
       perfil: 'admin',
     },
@@ -177,6 +177,29 @@ async function main() {
         encerradoEm: new Date(agora.getTime() + 10000),
         status: 'recusada',
       },
+    });
+  }
+
+  // 5. Criar Notificações de Exemplo
+  const notificacoesCount = await prisma.notificacao.count();
+  if (notificacoesCount === 0) {
+    await prisma.notificacao.create({
+      data: {
+        dispositivoId: dispApto001.id,
+        tipo: 'chamada',
+        mensagem: 'Chamada perdida de Portaria Principal',
+        lida: false,
+        criadoEm: new Date(),
+      }
+    });
+    await prisma.notificacao.create({
+      data: {
+        dispositivoId: dispApto003.id,
+        tipo: 'sistema',
+        mensagem: 'Atualização do sistema disponível para a versão v1.1.0',
+        lida: true,
+        criadoEm: new Date(),
+      }
     });
   }
 
