@@ -16,6 +16,7 @@ export default function HomeScreen({ navigation }) {
     const [portaria, setPortaria] = useState(null);
     const [meuAndroidId, setMeuAndroidId] = useState(null);
     const [meuNome, setMeuNome] = useState('');
+    const [meuLocal, setMeuLocal] = useState('');
     const [dispositivosOnline, setDispositivosOnline] = useState({});
 
     const [fontsLoaded] = useFonts({
@@ -38,6 +39,7 @@ export default function HomeScreen({ navigation }) {
 
             setMeuAndroidId(androidId);
             setMeuNome(nome || 'Usuário');
+            setMeuLocal(local || '');
 
             await carregarDispositivos();
 
@@ -123,7 +125,7 @@ export default function HomeScreen({ navigation }) {
                     }).catch(() => ({ data: { id: null } }));
                     const novaChamada = resChamada.data;
 
-chamar(meuAndroidId, item.androidId, meuNome, item.residencia?.identificador || 'Portaria', novaChamada?.id);
+            chamar(meuAndroidId, item.androidId, meuNome, meuLocal, novaChamada?.id);
 
                     navigation.navigate('Chamada', {
                         nome: nomeContato,
@@ -193,7 +195,7 @@ chamar(meuAndroidId, item.androidId, meuNome, item.residencia?.identificador || 
                             }).catch(() => ({ data: { id: null } }));
                             const novaChamada = resChamada.data;
 
-                            chamar(meuAndroidId, portaria.androidId, meuNome, 'Portaria Principal', novaChamada?.id);
+                            chamar(meuAndroidId, portaria.androidId, meuNome, meuLocal, novaChamada?.id);
 
                             navigation.navigate('Chamada', {
                                 nome: 'Portaria',
