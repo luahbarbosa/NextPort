@@ -24,6 +24,7 @@ model Usuario {
   tokenExpiraEm    DateTime? @map("token_expira_em")
   criadoEm         DateTime? @default(now()) @map("criado_em")
   ultimoLogin      DateTime? @map("ultimo_login")
+  cpf              String?   @db.VarChar(14)
 
   residencias Residencia[]
   logs        LogSistema[]
@@ -36,11 +37,11 @@ model Residencia {
   id            Int       @id @default(autoincrement())
   identificador String    @unique @db.VarChar(20)
   bloco         String?   @db.VarChar(20)
-  usuarioId     Int       @map("usuario_id")
+  usuarioId     Int?      @map("usuario_id")
   ativa         Boolean?  @default(true)
   criadoEm      DateTime? @default(now()) @map("criado_em")
 
-  usuario      Usuario       @relation(fields: [usuarioId], references: [id])
+  usuario      Usuario?      @relation(fields: [usuarioId], references: [id])
   dispositivos Dispositivo[]
 
   @@map("residencias")

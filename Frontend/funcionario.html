@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>NexPort - Cadastro de Funcionários</title>
+  <link rel="stylesheet" href="src/css/stylesdois.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@phosphor-icons/web@2.1.1/src/regular/style.css" />
+  <style>
+    /* Estilos específicos do formulário de cadastro,
+       para ficarem coerentes com o padrão visual do stylesdois.css */
+    .form-card{
+      max-width: 500px;
+      margin: 0 auto;
+      background:#fff;
+      padding:30px;
+      border-radius:12px;
+      box-shadow:0 5px 15px rgba(0,0,0,.08);
+    }
+
+    #formFuncionario{
+      display:flex;
+      flex-direction:column;
+      gap:18px;
+    }
+
+    .campo{
+      display:flex;
+      flex-direction:column;
+    }
+
+    .campo label{
+      margin-bottom:6px;
+      font-weight:bold;
+      color:#555;
+    }
+
+    .campo input,
+    .campo select{
+      padding:12px;
+      border:1px solid #ccc;
+      border-radius:8px;
+      font-size:15px;
+      font-family: inherit;
+    }
+
+    .campo input:focus,
+    .campo select:focus{
+      outline:none;
+      border-color:#2563eb;
+    }
+
+    #formFuncionario button{
+      margin-top:10px;
+      padding:13px;
+      border:none;
+      border-radius:8px;
+      background:#2563eb;
+      color:white;
+      font-size:16px;
+      font-weight:bold;
+      cursor:pointer;
+      transition:.3s;
+    }
+
+    #formFuncionario button:hover{
+      background:#1d4ed8;
+    }
+  </style>
+</head>
+<body>
+  <div class="dashboard-container">
+    <aside class="sidebar">
+      <div class="sidebar-logo">
+        <img src="src/images/nexport-logo.svg" alt="NexPort" class="sidebar-brand-image" />
+      </div>
+      <nav class="sidebar-menu">
+        <ul class="menu-list">
+          <li class="menu-item"><a href="index.html" class="menu-link"><i class="ph ph-gauge"></i><span>Gerenciamento Central</span></a></li>
+          <li class="menu-item"><a href="dispositivos.html" class="menu-link"><i class="ph ph-device-tablet"></i><span>Dispositivos</span></a></li>
+          <li class="menu-item"><a href="moradores.html" class="menu-link"><i class="ph ph-users"></i><span>Moradores</span></a></li>
+          <li class="menu-item active"><a href="funcionarios.html" class="menu-link"><i class="ph ph-identification-card"></i><span>Funcionários</span></a></li>
+        </ul>
+      </nav>
+    </aside>
+
+    <main class="main-content">
+      <header class="page-header">
+        <div class="header-left">
+          <h1 class="page-title">Cadastro de Funcionários</h1>
+          <p class="page-subtitle">Cadastre novos funcionários no sistema.</p>
+        </div>
+        <div class="header-right">
+          <details class="profile-menu">
+            <summary class="profile-trigger">
+              <span class="profile-avatar">LM</span>
+              <span class="profile-text">
+                <strong>Laura Meneses</strong>
+                <small>Administrador</small>
+              </span>
+              <i class="ph ph-caret-down"></i>
+            </summary>
+            <div class="profile-dropdown">
+              <a href="perfil.html" class="profile-action"><i class="ph ph-user-circle"></i><span>Meu Perfil</span></a>
+              <a href="senha.html" class="profile-action"><i class="ph ph-lock-key"></i><span>Alterar Senha</span></a>
+              <a href="#" id="logout-link" class="profile-action profile-action-logout"><i class="ph ph-sign-out"></i><span>Sair</span></a>
+            </div>
+          </details>
+        </div>
+      </header>
+
+      <section class="devices-content">
+        <div class="panel-card form-card">
+          <form id="formFuncionario">
+
+            <div class="campo">
+              <label for="nome">Nome Completo</label>
+              <input type="text" id="nome" placeholder="Digite o nome completo" required>
+            </div>
+
+            <div class="campo">
+              <label for="cpf">CPF</label>
+              <input type="text" id="cpf" placeholder="000.000.000-00" required>
+            </div>
+
+            <div class="campo">
+              <label for="email">E-mail</label>
+              <input type="email" id="email" placeholder="email@exemplo.com" required>
+            </div>
+
+            <div class="campo">
+              <label for="senha">Senha</label>
+              <input type="password" id="senha" placeholder="Digite a senha" required>
+            </div>
+
+            <div class="campo">
+              <label for="cargo">Cargo</label>
+              <select id="cargo" required>
+                <option value="">Selecione o cargo</option>
+                <option value="Administrador">Administrador</option>
+                <option value="Funcionário Comum">Funcionário Comum</option>
+              </select>
+            </div>
+
+            <button type="submit">Cadastrar Funcionário</button>
+
+          </form>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script type="module" src="src/js/config.js"></script>
+  <script type="module" src="src/js/auth.js"></script>
+  <script type="module" src="src/js/protected-route.js"></script>
+  <script type="module" src="src/js/profile-menu.js"></script>
+  <script>
+    const form = document.getElementById("formFuncionario");
+
+    form.addEventListener("submit", async function(event){
+        event.preventDefault();
+
+        const nome = document.getElementById("nome").value.trim();
+        const cpf = document.getElementById("cpf").value.trim();
+        const email = document.getElementById("email").value.trim();
+        const senha = document.getElementById("senha").value;
+        const cargo = document.getElementById("cargo").value;
+
+        if(!nome || !cpf || !email || !senha || !cargo){
+            alert("Preencha todos os campos.");
+            return;
+        }
+
+        const funcionario = {
+            nome,
+            cpf,
+            email,
+            senha,
+            cargo
+        };
+
+        try {
+            const url = window.NexportApi?.registro('/funcionarios') || 'http://localhost:3002/funcionarios';
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(funcionario)
+            });
+
+            if (response.ok) {
+                alert("Funcionário cadastrado com sucesso!");
+                form.reset();
+                window.location.href = "funcionarios.html";
+            } else {
+                const data = await response.json().catch(() => ({}));
+                alert("Erro ao cadastrar funcionário: " + (data.erro || 'Erro desconhecido'));
+            }
+        } catch (error) {
+            console.error("Erro ao cadastrar funcionário:", error);
+            alert("Erro ao conectar com o servidor.");
+        }
+    });
+  </script>
+</body>
+</html>
