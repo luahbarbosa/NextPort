@@ -30,6 +30,23 @@ document.addEventListener('DOMContentLoaded', () => {
     if (role) role.textContent = profile.cargo || 'Administrador';
     if (email) email.textContent = profile.email || '';
     if (avatar) avatar.textContent = (profile.nome || 'A').split(' ').slice(0, 2).map((item) => item[0]).join('').toUpperCase();
+
+    // Also update the header user card dynamically
+    const headerAvatar = document.querySelector('.profile-trigger .profile-avatar');
+    const headerName = document.querySelector('.profile-trigger .profile-text strong');
+    const headerRole = document.querySelector('.profile-trigger .profile-text small');
+    if (headerName) headerName.textContent = profile.nome || 'Administrador';
+    if (headerRole) headerRole.textContent = profile.cargo || 'Administrador';
+    if (headerAvatar && profile.nome) {
+      const initials = profile.nome
+        .split(' ')
+        .filter(Boolean)
+        .slice(0, 2)
+        .map((word) => word[0])
+        .join('')
+        .toUpperCase();
+      headerAvatar.textContent = initials || 'A';
+    }
   }
 
   async function loadProfile() {

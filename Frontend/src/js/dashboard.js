@@ -9,9 +9,9 @@
 // ===== DADOS INICIAIS E ESTADO LOCAL =====
 const initialDashboardData = {
     user: {
-        name: "Laura Meneses",
+        name: "Administrador",
         role: "Administrador",
-        avatar: "LM"
+        avatar: "A"
     },
     metrics: {
         totalDevices: 0,

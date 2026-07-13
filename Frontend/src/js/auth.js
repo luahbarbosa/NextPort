@@ -6,12 +6,12 @@
   };
 
   const DEFAULT_PROFILE = {
-    nome: 'Laura Meneses',
-    email: 'laura@nexport.com',
+    nome: 'Administrador',
+    email: 'admin@interfacil.com',
     cargo: 'Administrador',
-    telefone: '(11) 99999-0000',
-    departamento: 'Operações',
-    endereco: 'São Paulo, SP'
+    telefone: '',
+    departamento: '',
+    endereco: ''
   };
 
   const DEMO_ADMIN = {
@@ -150,10 +150,6 @@
       return { ok: false, message: 'Informe e-mail e senha para continuar.' };
     }
 
-    if (isDemoAdminCredentials(normalizedEmail, normalizedPassword)) {
-      setAuthToken('demo-admin-token');
-      return { ok: true, profile: buildDemoAdminProfile(normalizedEmail) };
-    }
 
     try {
       const response = await fetch(window.NexportApi?.auth('/auth/login') || 'http://localhost:3001/auth/login', {
