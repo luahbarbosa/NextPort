@@ -1162,3 +1162,9 @@ p {
 .form-card {
     animation: fadeIn 0.5s ease-out;
 }
+
+/* Hide header profile menu while loading authenticated user */
+.profile-menu.profile-loading .profile-trigger {
+    opacity: 0 !important;
+    pointer-events: none !important;
+}
