@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>NexPort - Funcionários</title>
+  <link rel="stylesheet" href="src/css/stylesdois.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@phosphor-icons/web@2.1.1/src/regular/style.css" />
+  <style>
+    /* Estilos extras para o modal de edição e botões de ação */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(0, 0, 0, 0.5);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s ease;
+    }
+
+    .modal-overlay.active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .modal-card {
+      background: var(--color-white);
+      padding: 30px;
+      border-radius: var(--radius-md);
+      box-shadow: var(--shadow-lg);
+      width: 100%;
+      max-width: 500px;
+      transform: translateY(-20px);
+      transition: transform 0.3s ease;
+    }
+
+    .modal-overlay.active .modal-card {
+      transform: translateY(0);
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      border-bottom: 1px solid var(--color-border);
+      padding-bottom: 10px;
+    }
+
+    .modal-header h2 {
+      font-size: 20px;
+      color: var(--color-text-dark);
+      margin: 0;
+    }
+
+    .modal-close {
+      background: none;
+      border: none;
+      font-size: 24px;
+      cursor: pointer;
+      color: var(--color-text-light);
+    }
+
+    .modal-body form {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+    }
+
+    .modal-body .campo {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .modal-body .campo label {
+      margin-bottom: 6px;
+      font-weight: 600;
+      color: #374151;
+    }
+
+    .modal-body .campo input,
+    .modal-body .campo select {
+      padding: 10px;
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-sm);
+      font-size: 15px;
+    }
+
+    .modal-body .campo input:focus,
+    .modal-body .campo select:focus {
+      outline: none;
+      border-color: var(--color-primary-blue);
+    }
+
+    .modal-footer {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      margin-top: 20px;
+    }
+
+    .modal-footer button {
+      padding: 10px 18px;
+      border-radius: var(--radius-sm);
+      font-size: 15px;
+      font-weight: bold;
+      cursor: pointer;
+      border: none;
+    }
+
+    .modal-btn-cancel {
+      background: var(--color-border);
+      color: var(--color-text-dark);
+    }
+
+    .modal-btn-save {
+      background: var(--color-primary-blue);
+      color: var(--color-white);
+    }
+
+    .table-actions {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 15px;
+      margin-bottom: 15px;
+    }
+
+    .table-actions-right {
+      display: flex;
+      gap: 10px;
+    }
+
+    .btn-primary-blue {
+      background: #2563eb;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      padding: 10px 16px;
+      font-weight: bold;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: background 0.2s;
+    }
+
+    .btn-primary-blue:hover {
+      background: #1d4ed8;
+    }
+
+    .action-btn {
+      background: none;
+      border: none;
+      font-size: 16px;
+      cursor: pointer;
+      padding: 5px;
+      border-radius: 4px;
+      transition: background 0.2s;
+    }
+
+    .action-btn:hover {
+      background: var(--color-border);
+    }
+
+    .btn-edit {
+      color: var(--color-primary-blue);
+    }
+
+    .btn-delete {
+      color: var(--color-error);
+    }
+  </style>
+</head>
+<body>
+  <div class="dashboard-container devices-page">
+    <aside class="sidebar">
+      <div class="sidebar-logo">
+        <img src="src/images/nexport-logo.svg" alt="NexPort" class="sidebar-brand-image" />
+      </div>
+      <nav class="sidebar-menu">
+        <ul class="menu-list">
+          <li class="menu-item"><a href="index.html" class="menu-link"><i class="ph ph-gauge"></i><span>Gerenciamento Central</span></a></li>
+          <li class="menu-item"><a href="dispositivos.html" class="menu-link"><i class="ph ph-device-tablet"></i><span>Dispositivos</span></a></li>
+          <li class="menu-item"><a href="moradores.html" class="menu-link"><i class="ph ph-users"></i><span>Moradores</span></a></li>
+          <li class="menu-item active"><a href="funcionarios.html" class="menu-link"><i class="ph ph-identification-card"></i><span>Funcionários</span></a></li>
+        </ul>
+      </nav>
+    </aside>
+
+    <main class="main-content">
+      <header class="page-header devices-header">
+        <div class="header-left">
+          <h1 class="page-title">Funcionários</h1>
+          <p class="page-subtitle">Gerencie todos os funcionários cadastrados no sistema.</p>
+        </div>
+        <div class="header-right">
+          <details class="profile-menu profile-loading">
+            <summary class="profile-trigger">
+              <span class="profile-avatar">&nbsp;</span>
+              <span class="profile-text">
+                <strong>&nbsp;</strong>
+                <small>&nbsp;</small>
+              </span>
+              <i class="ph ph-caret-down"></i>
+            </summary>
+            <div class="profile-dropdown">
+              <a href="perfil.html" class="profile-action"><i class="ph ph-user-circle"></i><span>Meu Perfil</span></a>
+              <a href="senha.html" class="profile-action"><i class="ph ph-lock-key"></i><span>Alterar Senha</span></a>
+              <a href="#" id="logout-link" class="profile-action profile-action-logout"><i class="ph ph-sign-out"></i><span>Sair</span></a>
+            </div>
+          </details>
+        </div>
+      </header>
+
+      <section class="devices-content">
+        <div class="devices-grid">
+          <div class="table-panel">
+            <div class="table-actions">
+              <div class="search-box">
+                <i class="ph ph-magnifying-glass search-icon"></i>
+                <input type="text" id="search-funcionario" class="search-input" placeholder="Buscar funcionário por nome, CPF ou cargo..." />
+              </div>
+              <div class="table-actions-right">
+                <button class="btn btn-secondary" id="btn-filters" type="button"><i class="ph ph-sliders"></i>Filtros</button>
+                <button class="btn-primary-blue" type="button" onclick="location.href='funcionario.html'">
+                  <i class="ph ph-plus"></i> Novo Funcionário
+                </button>
+              </div>
+            </div>
+
+            <div class="panel-card">
+              <div class="table-wrapper">
+                <table class="devices-table">
+                  <thead>
+                    <tr>
+                      <th>Nome</th>
+                      <th>CPF</th>
+                      <th>E-mail</th>
+                      <th>Cargo</th>
+                      <th>Ações</th>
+                    </tr>
+                  </thead>
+                  <tbody id="funcionarios-table-body">
+                    <tr>
+                      <td colspan="5" class="empty-state">Carregando funcionários...</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+              <div class="table-footer">
+                <div class="pagination-info" id="pagination-info">Mostrando 0 funcionários</div>
+                <div class="pagination-controls">
+                  <button class="pagination-btn" disabled>&lt;</button>
+                  <button class="pagination-btn active">1</button>
+                  <button class="pagination-btn" disabled>&gt;</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- Modal de Edição de Funcionário -->
+  <div class="modal-overlay" id="editModalOverlay">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h2>Editar Funcionário</h2>
+        <button class="modal-close" id="btn-close-modal">&times;</button>
+      </div>
+      <div class="modal-body">
+        <form id="editFormFuncionario">
+          <div class="campo">
+            <label for="edit-nome">Nome Completo</label>
+            <input type="text" id="edit-nome" required />
+          </div>
+
+          <div class="campo">
+            <label for="edit-cpf">CPF</label>
+            <input type="text" id="edit-cpf" placeholder="000.000.000-00" required />
+          </div>
+
+          <div class="campo">
+            <label for="edit-email">E-mail</label>
+            <input type="email" id="edit-email" required />
+          </div>
+
+          <div class="campo">
+            <label for="edit-senha">Senha (deixe em branco para manter a atual)</label>
+            <input type="password" id="edit-senha" placeholder="Digite uma nova senha se quiser alterar" />
+          </div>
+
+          <div class="campo">
+            <label for="edit-cargo">Cargo</label>
+            <select id="edit-cargo" required>
+              <option value="">Selecione o cargo</option>
+              <option value="Administrador">Administrador</option>
+              <option value="Funcionário Comum">Funcionário Comum</option>
+            </select>
+          </div>
+
+          <div class="modal-footer">
+            <button type="button" class="modal-btn-cancel" id="btn-cancel-edit">Cancelar</button>
+            <button type="submit" class="modal-btn-save">Salvar Alterações</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="src/js/config.js"></script>
+  <script type="module" src="src/js/auth.js"></script>
+  <script type="module" src="src/js/protected-route.js"></script>
+  <script type="module" src="src/js/profile-menu.js"></script>
+  <script>
+    // JS de controle da tela de funcionários
+    const state = {
+      funcionarios: [],
+      termoBusca: '',
+      editandoId: null
+    };
+
+    // Prevenção de XSS: escapa caracteres HTML especiais
+    function escapeHtml(str) {
+      return String(str || '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
+
+    async function carregarFuncionarios() {
+      try {
+        const url = window.NexportApi?.registro('/funcionarios') || 'http://localhost:3002/funcionarios';
+        const response = await fetch(url);
+        if (!response.ok) throw new Error('Erro ao carregar funcionários do servidor.');
+
+        state.funcionarios = await response.json();
+        renderFuncionarios();
+      } catch (err) {
+        console.error(err);
+        const tbody = document.getElementById('funcionarios-table-body');
+        if (tbody) {
+          tbody.innerHTML = `
+            <tr>
+              <td colspan="5" class="empty-state">Erro ao carregar funcionários.</td>
+            </tr>
+          `;
+        }
+      }
+    }
+
+    function renderFuncionarios() {
+      const tbody = document.getElementById('funcionarios-table-body');
+      if (!tbody) return;
+
+      const termo = state.termoBusca.toLowerCase().trim();
+      const filtrados = state.funcionarios.filter(f => {
+        return (
+          f.nome.toLowerCase().includes(termo) ||
+          f.email.toLowerCase().includes(termo) ||
+          (f.cpf && f.cpf.toLowerCase().includes(termo)) ||
+          f.cargo.toLowerCase().includes(termo)
+        );
+      });
+
+      if (filtrados.length === 0) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="5" class="empty-state">Nenhum funcionário encontrado.</td>
+          </tr>
+        `;
+      } else {
+        tbody.innerHTML = filtrados.map(f => {
+          return `
+            <tr>
+              <td>
+                <div style="font-weight: 600; color: var(--color-text-dark);">${escapeHtml(f.nome)}</div>
+              </td>
+              <td>${escapeHtml(f.cpf || '—')}</td>
+              <td>${escapeHtml(f.email)}</td>
+              <td>
+                <span class="status-pill ${f.cargo === 'Administrador' ? 'status-online' : 'status-offline'}">
+                  ${escapeHtml(f.cargo)}
+                </span>
+              </td>
+              <td class="actions-cell">
+                <button class="action-btn btn-edit"
+                  title="✏️ Editar dados do funcionário"
+                  data-tooltip="Editar funcionário"
+                  aria-label="Editar funcionário"
+                  onclick="abrirEdicao(${f.id})">
+                  <i class="ph ph-pencil-simple" style="font-size: 18px;"></i>
+                </button>
+                <button class="action-btn btn-delete"
+                  title="🗑️ Excluir funcionário do sistema"
+                  data-tooltip="Excluir funcionário"
+                  aria-label="Excluir funcionário"
+                  data-id="${f.id}" data-nome="${escapeHtml(f.nome)}"
+                  onclick="deletarFuncionario(this)">
+                  <i class="ph ph-trash" style="font-size: 18px;"></i>
+                </button>
+              </td>
+            </tr>
+          `;
+        }).join('');
+      }
+
+      document.getElementById('pagination-info').textContent = `Mostrando ${filtrados.length} de ${state.funcionarios.length} funcionários`;
+    }
+
+    async function deletarFuncionario(btn) {
+      const id = Number(btn.dataset.id);
+      const nome = btn.dataset.nome;
+      if (!confirm(`Tem certeza que deseja excluir o funcionário ${nome}?`)) return;
+
+      try {
+        const url = (window.NexportApi?.registro('/funcionarios') || 'http://localhost:3002/funcionarios') + '/' + id;
+        const response = await fetch(url, { method: 'DELETE' });
+
+        if (response.ok) {
+          alert('Funcionário excluído com sucesso!');
+          carregarFuncionarios();
+        } else {
+          const data = await response.json().catch(() => ({}));
+          alert('Erro ao excluir: ' + (data.erro || 'Erro desconhecido'));
+        }
+      } catch (err) {
+        console.error(err);
+        alert('Erro ao conectar com o servidor.');
+      }
+    }
+
+    function abrirEdicao(id) {
+      const funcionario = state.funcionarios.find(f => f.id === id);
+      if (!funcionario) return;
+
+      state.editandoId = id;
+      document.getElementById('edit-nome').value = funcionario.nome;
+      document.getElementById('edit-cpf').value = funcionario.cpf || '';
+      document.getElementById('edit-email').value = funcionario.email;
+      document.getElementById('edit-senha').value = '';
+      document.getElementById('edit-cargo').value = funcionario.cargo;
+
+      document.getElementById('editModalOverlay').classList.add('active');
+    }
+
+    function fecharModal() {
+      document.getElementById('editModalOverlay').classList.remove('active');
+      state.editandoId = null;
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      carregarFuncionarios();
+
+      document.getElementById('search-funcionario').addEventListener('input', (e) => {
+        state.termoBusca = e.target.value;
+        renderFuncionarios();
+      });
+
+      document.getElementById('btn-close-modal').addEventListener('click', fecharModal);
+      document.getElementById('btn-cancel-edit').addEventListener('click', fecharModal);
+
+      document.getElementById('editFormFuncionario').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        const nome = document.getElementById('edit-nome').value.trim();
+        const cpf = document.getElementById('edit-cpf').value.trim();
+        const email = document.getElementById('edit-email').value.trim();
+        const senha = document.getElementById('edit-senha').value;
+        const cargo = document.getElementById('edit-cargo').value;
+
+        if (!nome || !cpf || !email || !cargo) {
+          alert('Preencha todos os campos obrigatórios.');
+          return;
+        }
+
+        const payload = {
+          nome,
+          cpf,
+          email,
+          cargo
+        };
+        if (senha) {
+          payload.senha = senha;
+        }
+
+        try {
+          const url = (window.NexportApi?.registro('/funcionarios') || 'http://localhost:3002/funcionarios') + '/' + state.editandoId;
+          const response = await fetch(url, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+          });
+
+          if (response.ok) {
+            alert('Funcionário atualizado com sucesso!');
+            fecharModal();
+            carregarFuncionarios();
+          } else {
+            const data = await response.json().catch(() => ({}));
+            alert('Erro ao atualizar: ' + (data.erro || 'Erro desconhecido'));
+          }
+        } catch (err) {
+          console.error(err);
+          alert('Erro ao conectar com o servidor.');
+        }
+      });
+    });
+  </script>
+</body>
+</html>

@@ -690,6 +690,63 @@ p {
     background-color: rgba(239, 68, 68, 0.18);
 }
 
+/* ===== TOOLTIP CUSTOMIZADO PARA BOTÕES DE AÇÃO ===== */
+/* Usando o atributo title nativo + transform sutil no hover */
+.action-btn {
+    position: relative;
+}
+
+.action-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12);
+}
+
+.action-btn:active {
+    transform: translateY(0);
+    box-shadow: none;
+}
+
+/* Tooltip via pseudo-elemento usando atributo title simulado com data-tooltip */
+.action-btn[data-tooltip]::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    bottom: calc(100% + 6px);
+    left: 50%;
+    transform: translateX(-50%) scale(0.9);
+    background: #1e293b;
+    color: #f8fafc;
+    font-size: 11px;
+    font-weight: 500;
+    white-space: nowrap;
+    padding: 4px 8px;
+    border-radius: 4px;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.15s ease, transform 0.15s ease;
+    z-index: 100;
+    letter-spacing: 0.01em;
+}
+
+.action-btn[data-tooltip]::before {
+    content: '';
+    position: absolute;
+    bottom: calc(100% + 2px);
+    left: 50%;
+    transform: translateX(-50%);
+    border: 4px solid transparent;
+    border-top-color: #1e293b;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.15s ease;
+    z-index: 100;
+}
+
+.action-btn[data-tooltip]:hover::after,
+.action-btn[data-tooltip]:hover::before {
+    opacity: 1;
+    transform: translateX(-50%) scale(1);
+}
+
 /* ===== RODAPÉ DA TABELA / PAGINAÇÃO ===== */
 .table-footer {
     display: flex;
@@ -1104,4 +1161,10 @@ p {
 .legend-card,
 .form-card {
     animation: fadeIn 0.5s ease-out;
+}
+
+/* Hide header profile menu while loading authenticated user */
+.profile-menu.profile-loading .profile-trigger {
+    opacity: 0 !important;
+    pointer-events: none !important;
 }
