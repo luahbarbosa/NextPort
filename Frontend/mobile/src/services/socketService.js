@@ -51,11 +51,11 @@ export const conectarSocket = (androidId, onChamadaRecebida, onStatusAtualizado)
   });
 
   socket.on('connect_error', (err) => {
-    console.error('[Socket] Connect Error:', err.message);
+    console.log('[Socket] Connect Error:', err.message);
   });
 
   socket.on('error', (err) => {
-    console.error('[Socket] Error:', err);
+    console.log('[Socket] Error:', err);
   });
 
   socket.io.on('reconnect', () => {
@@ -67,7 +67,7 @@ export const conectarSocket = (androidId, onChamadaRecebida, onStatusAtualizado)
   });
 
   socket.io.on('reconnect_error', (err) => {
-    console.error('[Socket] reconnect_error:', err.message);
+    console.log('[Socket] reconnect_error:', err.message);
   });
 
   socket.io.on('reconnect_failed', () => {

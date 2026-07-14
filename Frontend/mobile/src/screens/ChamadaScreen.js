@@ -71,7 +71,7 @@ export default function ChamadaScreen({ route, navigation }) {
         PeerConnection.addIceCandidate(data.candidate);
       });
     } catch (err) {
-      console.error('Erro ao iniciar WebRTC:', err?.message || err);
+      console.log('Erro ao iniciar WebRTC:', err?.message || err);
     }
   }
 
@@ -110,7 +110,7 @@ export default function ChamadaScreen({ route, navigation }) {
         PeerConnection.addIceCandidate(data.candidate);
       });
     } catch (err) {
-      console.error('Erro ao iniciar WebRTC (receiver):', err?.message || err);
+      console.log('Erro ao iniciar WebRTC (receiver):', err?.message || err);
     }
   }
 
@@ -131,7 +131,7 @@ export default function ChamadaScreen({ route, navigation }) {
         aceitarChamada(destinoAndroidId, chamadaId);
       }
     } catch (err) {
-      console.error('Erro ao aceitar chamada:', err?.message || 'Erro');
+      console.log('Erro ao aceitar chamada:', err?.message || 'Erro');
       navigation.goBack();
     }
   };
@@ -149,7 +149,7 @@ export default function ChamadaScreen({ route, navigation }) {
       }
       navigation.goBack();
     } catch (err) {
-      console.error('Erro ao recusar chamada:', err?.message || 'Erro');
+      console.log('Erro ao recusar chamada:', err?.message || 'Erro');
       navigation.goBack();
     }
   };
@@ -168,7 +168,7 @@ export default function ChamadaScreen({ route, navigation }) {
       }
       navigation.goBack();
     } catch (err) {
-      console.error('Erro ao encerrar chamada:', err?.message || 'Erro');
+      console.log('Erro ao encerrar chamada:', err?.message || 'Erro');
       navigation.goBack();
     }
   };
