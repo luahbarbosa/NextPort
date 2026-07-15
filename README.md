@@ -63,4 +63,4 @@ A proposta é transformar dispositivos Android antigos em terminais de interfone
 - [x] Demonstração prática validada em cenário real.
 
 guia para rodar o backend
-- backend/readne.md
+- backend/README.md
