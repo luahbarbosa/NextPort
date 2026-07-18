@@ -8,7 +8,7 @@ title InterFacil - Iniciando servicos
 :: 3. Execute: start.bat  (ou clique duas vezes no Explorer)
 ::
 :: O script verifica PostgreSQL, instala dependencias se necessario,
-:: e abre 4 janelas cmd: auth(:3001) registro(:3002) chamada(:3003) signaling(:3004)
+:: e abre 5 janelas cmd: auth(:3001) registro(:3002) chamada(:3003) signaling(:3004) notif(:3005)
 ::
 :: Pre-requisitos: Docker Desktop, Node.js, npm
 :: ============================================================

@@ -1,19 +1,22 @@
 import { useEffect, useState } from 'react';
 import {
     View, Text, StyleSheet, FlatList,
-    TextInput, TouchableOpacity, SafeAreaView, Image
+    TextInput, TouchableOpacity, Image
 } from 'react-native';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useFonts, Poppins_400Regular, Poppins_600SemiBold, Poppins_700Bold } from '@expo-google-fonts/poppins';
 import api, { chamadaApi } from '../services/api';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { conectarSocket, chamar, desconectarSocket } from '../services/socketService';
+import { conectarSocket, chamar, desconectarSocket, getSocket } from '../services/socketService';
 
 export default function HomeScreen({ navigation }) {
+    const insets = useSafeAreaInsets();
     const [dispositivos, setDispositivos] = useState([]);
     const [busca, setBusca] = useState('');
     const [portaria, setPortaria] = useState(null);
     const [meuAndroidId, setMeuAndroidId] = useState(null);
     const [meuNome, setMeuNome] = useState('');
+    const [meuLocal, setMeuLocal] = useState('');
     const [dispositivosOnline, setDispositivosOnline] = useState({});
 
     const [fontsLoaded] = useFonts({
@@ -23,40 +26,56 @@ export default function HomeScreen({ navigation }) {
     });
 
     useEffect(() => {
-        carregarDados();
+        let cancelado = false;
+
+        const iniciar = async () => {
+            if (cancelado) return;
+
+            const androidId = await AsyncStorage.getItem('androidId');
+            const nome = await AsyncStorage.getItem('nomeUsuario');
+            const local = await AsyncStorage.getItem('localDispositivo');
+
+            if (cancelado) return;
+
+            setMeuAndroidId(androidId);
+            setMeuNome(nome || 'Usuário');
+            setMeuLocal(local || '');
+
+            await carregarDispositivos();
+
+            if (androidId && !cancelado) {
+                conectarSocket(
+                    androidId,
+                    (chamadaData) => {
+                        navigation.navigate('Chamada', {
+                            nome: chamadaData.nome,
+                            local: chamadaData.local,
+                            tipo: 'recebendo',
+                            deAndroidId: chamadaData.deAndroidId,
+                            chamadaId: chamadaData.chamadaId,
+                        });
+                    },
+                    (statusData) => {
+                        setDispositivosOnline(prev => ({
+                            ...prev,
+                            [statusData.androidId]: statusData.online
+                        }));
+                    }
+                );
+            }
+        };
+
+        iniciar();
+
+        return () => {
+            cancelado = true;
+            const socket = getSocket();
+            if (socket) {
+                socket.off('chamada_recebida');
+                socket.off('status_atualizado');
+            }
+        };
     }, []);
-
-    const carregarDados = async () => {
-    const androidId = await AsyncStorage.getItem('androidId');
-    const nome = await AsyncStorage.getItem('nomeUsuario'); // ← mudou aqui
-    const local = await AsyncStorage.getItem('localDispositivo');
-
-    setMeuAndroidId(androidId);
-    setMeuNome(nome || 'Usuário');
-
-    await carregarDispositivos();
-
-    if (androidId) {
-        conectarSocket(
-        androidId,
-        (chamadaData) => {
-            navigation.navigate('Chamada', {
-            nome: chamadaData.nome,
-            local: chamadaData.local,
-            tipo: 'recebendo',
-            deAndroidId: chamadaData.deAndroidId,
-            chamadaId: chamadaData.chamadaId,
-            });
-        },
-        (statusData) => {
-            setDispositivosOnline(prev => ({
-                ...prev,
-                [statusData.androidId]: statusData.online
-            }));
-        }
-        );
-    }
-    };
 
     const carregarDispositivos = async () => {
         try {
@@ -106,7 +125,7 @@ export default function HomeScreen({ navigation }) {
                     }).catch(() => ({ data: { id: null } }));
                     const novaChamada = resChamada.data;
 
-chamar(meuAndroidId, item.androidId, nomeContato, item.residencia?.identificador || 'Portaria', novaChamada?.id);
+            chamar(meuAndroidId, item.androidId, meuNome, meuLocal, novaChamada?.id);
 
                     navigation.navigate('Chamada', {
                         nome: nomeContato,
@@ -149,8 +168,8 @@ chamar(meuAndroidId, item.androidId, nomeContato, item.residencia?.identificador
     return (
         <SafeAreaView style={styles.container}>
 
-            {/* Header com logo */}
-            <View style={styles.header}>
+            {/* Header com logo e configurações */}
+            <View style={[styles.header, { paddingTop: 12}]}>
                 <Image source={require('../../assets/logo.png')} style={styles.logo} resizeMode="contain" />
             </View>
 
@@ -176,7 +195,7 @@ chamar(meuAndroidId, item.androidId, nomeContato, item.residencia?.identificador
                             }).catch(() => ({ data: { id: null } }));
                             const novaChamada = resChamada.data;
 
-                            chamar(meuAndroidId, portaria.androidId, 'Portaria', 'Portaria Principal', novaChamada?.id);
+                            chamar(meuAndroidId, portaria.androidId, meuNome, meuLocal, novaChamada?.id);
 
                             navigation.navigate('Chamada', {
                                 nome: 'Portaria',
@@ -220,7 +239,7 @@ chamar(meuAndroidId, item.androidId, nomeContato, item.residencia?.identificador
                 keyExtractor={(item) => item.id.toString()}
                 renderItem={renderContato}
                 showsVerticalScrollIndicator={false}
-                contentContainerStyle={{ paddingBottom: 80 }}
+                contentContainerStyle={{ paddingBottom: insets.bottom + 60 }}
                 ListEmptyComponent={
                     <Text style={styles.vazio}>Nenhum contato encontrado</Text>
                 }
@@ -234,13 +253,17 @@ const styles = StyleSheet.create({
     container: { flex: 1, backgroundColor: '#F0F0F0' },
 
     header: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
         backgroundColor: '#fff',
         paddingHorizontal: 20,
-        paddingVertical: 14,
+        paddingBottom: 14,
         borderBottomWidth: 1,
         borderBottomColor: '#eee',
     },
     logo: { width: 120, height: 36 },
+    settingsIcone: { width: 26, height: 26, tintColor: '#343399' },
 
     boasVindas: {
         flexDirection: 'row',

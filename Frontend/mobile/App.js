@@ -2,6 +2,7 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createStackNavigator } from '@react-navigation/stack';
 import { Image } from 'react-native';
+import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
 import LoginScreen from './src/screens/LoginScreen';
 import HomeScreen from './src/screens/HomeScreen';
 import HistoricoScreen from './src/screens/HistoricoScreen';
@@ -12,6 +13,7 @@ const Tab = createBottomTabNavigator();
 const Stack = createStackNavigator();
 
 function MainTabs() {
+  const insets = useSafeAreaInsets();
   return (
     <Tab.Navigator
       screenOptions={{
@@ -21,8 +23,8 @@ function MainTabs() {
           backgroundColor: '#fff',
           borderTopWidth: 1,
           borderTopColor: '#E0E0E0',
-          height: 70,
-          paddingBottom: 10,
+          height: 60 + insets.bottom,
+          paddingBottom: insets.bottom + 4,
           paddingTop: 10,
           shadowColor: '#000',
           shadowOffset: { width: 0, height: -3 },
@@ -62,27 +64,14 @@ function MainTabs() {
           )
         }}
       />
-      <Tab.Screen
-        name="Settings"
-        component={HomeScreen}
-        options={{
-          tabBarIcon: ({ focused }) => (
-            <Image
-              source={require('./assets/settings.png')}
-              style={{
-                width: 26, height: 26,
-                tintColor: focused ? '#343399' : '#968c8cff'
-              }}
-            />
-          )
-        }}
-      />
+
     </Tab.Navigator>
   );
 }
 
 export default function App() {
   return (
+    <SafeAreaProvider>
     <NavigationContainer>
       <Stack.Navigator screenOptions={{ headerShown: false }}>
         <Stack.Screen name="Splash" component={SplashScreen} />
@@ -91,5 +80,6 @@ export default function App() {
         <Stack.Screen name="Chamada" component={ChamadaScreen} />
       </Stack.Navigator>
     </NavigationContainer>
+    </SafeAreaProvider>
   );
 }
