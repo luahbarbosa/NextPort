@@ -8,7 +8,7 @@ title InterFacil - Iniciando servicos
 :: 3. Execute: start.bat  (ou clique duas vezes no Explorer)
 ::
 :: O script verifica PostgreSQL, instala dependencias se necessario,
-:: e abre 4 janelas cmd: auth(:3001) registro(:3002) chamada(:3003) signaling(:3004)
+:: e abre 5 janelas cmd: auth(:3001) registro(:3002) chamada(:3003) signaling(:3004) notif(:3005)
 ::
 :: Pre-requisitos: Docker Desktop, Node.js, npm
 :: ============================================================
@@ -61,6 +61,9 @@ start "Chamada Service" cmd /c "cd /d %~dp0backend\chamada-service && npm start"
 timeout /t 2 /nobreak >nul
 
 start "Signaling Server" cmd /c "cd /d %~dp0signaling-server && npm start"
+timeout /t 2 /nobreak >nul
+
+start "Notif Service" cmd /c "cd /d %~dp0backend\notif-service && npm start"
 
 echo.
 echo ========================================
@@ -71,6 +74,7 @@ echo  Auth:      http://localhost:3001
 echo  Registro:  http://localhost:3002
 echo  Chamada:   http://localhost:3003
 echo  Signaling: http://localhost:3004
+echo  Notif:     http://localhost:3005
 echo.
 echo  Para parar: feche as janelas abertas
 echo.
